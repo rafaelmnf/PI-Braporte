@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Braporte — Mapa</title>
+    <link rel="stylesheet" href="/css/mapa.css">
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <button class="topbar-btn" id="menuBtn" aria-label="Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <div class="topbar-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar localização..." id="searchInput">
+        </div>
+
+        <button class="topbar-btn" id="profileBtn" aria-label="Perfil">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+    </header>
+
+    <!-- MAPA (placeholder) -->
+    <main class="map-container" id="mapArea">
+        <div class="map-placeholder">
+            <div class="map-grid"></div>
+            <div class="map-center-pin">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#33d17a" stroke-width="2" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#33d17a" stroke="none"/></svg>
+            </div>
+            <span class="map-placeholder-text">Área do Mapa — Google Maps API</span>
+        </div>
+    </main>
+
+    <!-- BOTÕES FLUTUANTES -->
+    <div class="fab-container">
+       
+        <button class="fab fab-secondary" id="locateBtn" aria-label="Minha localização">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
+        </button>
+
+       
+        <button class="fab fab-primary" id="reportBtn" aria-label="Reportar problema">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4m0 4h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </button>
+    </div>
+
+    <!-- FILTROS RÁPIDOS -->
+    <div class="filter-chips" id="filterChips">
+        <button class="chip active" data-filter="todos">Todos</button>
+        <button class="chip" data-filter="alagamento">🌊 Alagamento</button>
+        <button class="chip" data-filter="incendio">🔥 Incêndio</button>
+        <button class="chip" data-filter="saneamento">🚰 Saneamento</button>
+        <button class="chip" data-filter="infraestrutura">🚧 Infraestrutura</button>
+        <button class="chip" data-filter="seguranca">🔒 Segurança</button>
+        <button class="chip" data-filter="meio-ambiente">🌳 Meio Ambiente</button>
+    </div>
+
+    <!-- POPUP OVERLAY (REPORT) -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-backdrop" id="popupBackdrop"></div>
+        
+        <div class="popup-sheet" id="popupSheet">
+            <div class="popup-header">
+                <div class="popup-handle"></div>
+                <h2>Novo Reporte</h2>
+                <p class="popup-subtitle">Selecione a categoria do problema</p>
+            </div>
+
+            <div class="popup-body">
+                <div class="category-grid">
+                    <button class="category-card" data-category="alagamento">
+                        <div class="category-icon" style="background: #dbeafe; color: #2563eb;">🌊</div>
+                        <span>Alagamento</span>
+                    </button>
+                    <button class="category-card" data-category="incendio">
+                        <div class="category-icon" style="background: #fee2e2; color: #dc2626;">🔥</div>
+                        <span>Incêndio</span>
+                    </button>
+                    <button class="category-card" data-category="saneamento">
+                        <div class="category-icon" style="background: #d1fae5; color: #059669;">🚰</div>
+                        <span>Saneamento</span>
+                    </button>
+                    <button class="category-card" data-category="infraestrutura">
+                        <div class="category-icon" style="background: #fef3c7; color: #d97706;">🚧</div>
+                        <span>Infraestrutura</span>
+                    </button>
+                    <button class="category-card" data-category="seguranca">
+                        <div class="category-icon" style="background: #ede9fe; color: #7c3aed;">🔒</div>
+                        <span>Segurança</span>
+                    </button>
+                    <button class="category-card" data-category="meio-ambiente">
+                        <div class="category-icon" style="background: #dcfce7; color: #16a34a;">🌳</div>
+                        <span>Meio Ambiente</span>
+                    </button>
+                    <button class="category-card" data-category="transito">
+                        <div class="category-icon" style="background: #ffedd5; color: #ea580c;">🚗</div>
+                        <span>Trânsito</span>
+                    </button>
+                    <button class="category-card" data-category="outros">
+                        <div class="category-icon" style="background: #f1f5f9; color: #475569;">📌</div>
+                        <span>Outros</span>
+                    </button>
+                </div>
+
+                <div class="report-form" id="reportForm" style="display: none;">
+                    <div class="selected-category" id="selectedCategory">
+                        <span class="selected-emoji"></span>
+                        <span class="selected-name"></span>
+                        <button class="change-category" id="changeCategoryBtn">Trocar</button>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="reportTitle">Título</label>
+                        <input type="text" id="reportTitle" placeholder="Ex: Buraco na Av. Brasil">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="reportDesc">Descrição</label>
+                        <textarea id="reportDesc" rows="3" placeholder="Descreva o problema com detalhes..."></textarea>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Foto (opcional)</label>
+                        <div class="photo-upload" id="photoUpload">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>Adicionar foto</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-submit" id="submitReport">
+                        Enviar Reporte
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/mapa.js"></script>
+</body>
+</html>
