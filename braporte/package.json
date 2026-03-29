@@ -1,11 +1,15 @@
 {
   "name": "braporte",
   "version": "1.0.0",
-  "description": "Mapa de Segurança Urbana Colaborativo",
-  "main": "server.js",
+  "description": "O projeto foi migrado para uma arquitetura moderna dividida em 3 camadas:",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
   },
-  "dependencies": {}
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
