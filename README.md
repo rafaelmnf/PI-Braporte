@@ -32,6 +32,7 @@ npm install
 ### 3. Rodando o Projeto
 Na raiz do projeto, pasta `braporte`:
 ```bash
+npm install
 npm run dev
 ```
 *(O backend estará rodando na porta 3000)*
