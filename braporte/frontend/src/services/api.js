@@ -25,5 +25,11 @@ export const api = {
         const response = await fetch(`${API_URL}/reportes`);
         if (!response.ok) throw new Error('Erro ao buscar reportes');
         return response.json();
+    },
+
+    async getMapConfig() {
+        const response = await fetch(`${API_URL}/config/mapbox`);
+        if (!response.ok) throw new Error('Erro ao buscar config do mapa');
+        return response.json();
     }
 };

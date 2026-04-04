@@ -5,9 +5,7 @@
 
 // import axios from 'axios';
 
-// O token virá do config/env futuramente
-// const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
+// O token agora vem do backend via API
 export const mapServices = {
     /**
      * Futuro: Buscar sugestões de endereço a partir de texto (Autocomplete)

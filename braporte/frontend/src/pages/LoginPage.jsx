@@ -1,174 +1,302 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
-import { validarEmail, validarCPF, maskCPF } from '../utils/validation';
-import '../styles/login.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
+import { validarEmail, validarCPF, maskCPF } from "../utils/validation";
+import "../styles/login.css";
+import CountUp from '../components/CountUp';
 
 const LoginPage = () => {
-    const navigate = useNavigate();
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-    const [cpf, setCpf] = useState('');
-    const [erros, setErros] = useState({ email: '', senha: '', cpf: '' });
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [erros, setErros] = useState({ email: "", senha: "", cpf: "" });
 
-    const handleCpfChange = (e) => {
-        setCpf(maskCPF(e.target.value));
-        if (erros.cpf) setErros(prev => ({ ...prev, cpf: '' }));
-    };
+  // Atualiza o CPF com máscara e limpa o erro do campo, se existir
+  const handleCpfChange = (e) => {
+    setCpf(maskCPF(e.target.value));
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        
-        const newErros = { email: '', senha: '', cpf: '' };
-        let valido = true;
+    if (erros.cpf) {
+      setErros((prev) => ({ ...prev, cpf: "" }));
+    }
+  };
 
-        if (!validarEmail(email.trim())) {
-            newErros.email = 'E-mail inválido.';
-            valido = false;
-        }
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (erros.email)
+      setErros((prev) => ({ ...prev, email: "" }));
+  };
 
-        if (senha.trim().length < 6) {
-            newErros.senha = 'Senha deve ter no mínimo 6 caracteres.';
-            valido = false;
-        }
+  const handleSenhaChange = (e) => {
+    setSenha(e.target.value);
+    if (erros.senha)
+      setErros((prev) => ({ ...prev, senha: "" }));
+  };
 
-        if (!validarCPF(cpf.trim())) {
-            newErros.cpf = 'CPF inválido.';
-            valido = false;
-        }
+  // Valida os campos antes de enviar o login
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-        setErros(newErros);
+    const newErros = { email: "", senha: "", cpf: "" };
+    let valido = true;
 
-        if (valido) {
-            try {
-                await api.login(email, senha, cpf);
-                navigate('/mapa');
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao realizar login');
-            }
-        }
-    };
+    if (!validarEmail(email.trim())) {
+      newErros.email = "E-mail inválido.";
+      valido = false;
+    }
 
-    return (
-        <div className="login-wrapper">
-            <div className="login-hero">
-                <div className="hero-overlay"></div>
-                <div className="hero-grid"></div>
-                <div className="hero-content">
-                    <div className="hero-icon">
-                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                            <circle cx="12" cy="9" r="2.5"/>
-                        </svg>
-                    </div>
-                    <h1>Braporte</h1>
-                    <p className="hero-tagline">Mapa de Segurança Urbana Colaborativo</p>
-                    <div className="hero-stats">
-                        <div className="stat">
-                            <span className="stat-number">—</span>
-                            <span className="stat-label">Reportes</span>
-                        </div>
-                        <div className="stat-divider"></div>
-                        <div className="stat">
-                            <span className="stat-number">—</span>
-                            <span className="stat-label">Usuários</span>
-                        </div>
-                        <div className="stat-divider"></div>
-                        <div className="stat">
-                            <span className="stat-number">—</span>
-                            <span className="stat-label">Cidades</span>
-                        </div>
-                    </div>
-                </div>
+    if (senha.trim().length < 6) {
+      newErros.senha = "Senha deve ter no mínimo 6 caracteres.";
+      valido = false;
+    }
+
+    if (!validarCPF(cpf.trim())) {
+      newErros.cpf = "CPF inválido.";
+      valido = false;
+    }
+
+    setErros(newErros);
+
+    if (valido) {
+      try {
+        await api.login(email, senha, cpf);
+        navigate("/mapa");
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao realizar login");
+      }
+    }
+  };
+
+  return (
+    <div className="login-wrapper">
+      <div className="login-hero">
+        <div className="hero-overlay"></div>
+        <div className="hero-grid"></div>
+
+        <div className="hero-content">
+          <div className="hero-icon">
+            <svg
+              width="56"
+              height="56"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+          </div>
+
+          <h1>Braporte</h1>
+          <p className="hero-tagline">Mapa de Segurança Urbana Colaborativo</p>
+
+          <div className="hero-stats">
+            <div className="stat">
+
+              <CountUp
+                from={0}
+                to={8231}
+                separator=","
+                direction="up"
+                duration={1}
+                className="stat-number count-up-text"
+                startCounting={false}
+              />
+              <span className="stat-label">Reportes</span>
             </div>
 
-            <div className="login-form-side">
-                <div className="form-container">
-                    
-                    <div className="mobile-logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#33d17a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                            <circle cx="12" cy="9" r="2.5"/>
-                        </svg>
-                        <span>Braporte</span>
-                    </div>
+            <div className="stat-divider"></div>
 
-                    <h2>Entrar</h2>
-                    <p className="form-subtitle">Acesse para reportar e monitorar sua cidade.</p>
-
-                    <form id="loginForm" noValidate onSubmit={handleLogin}>
-                        <div className="input-group">
-                            <label htmlFor="email">E-mail</label>
-                            <div className="input-wrapper">
-                                <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
-                                <input 
-                                    type="email" id="email" 
-                                    placeholder="seu@email.com" 
-                                    autoComplete="username" 
-                                    required 
-                                    className={erros.email ? 'has-error' : ''}
-                                    value={email}
-                                    onChange={e => {
-                                        setEmail(e.target.value);
-                                        if(erros.email) setErros(prev => ({...prev, email: ''}));
-                                    }}
-                                />
-                            </div>
-                            <span className="input-error" id="email-erro">{erros.email}</span>
-                        </div>
-
-                        <div className="input-group">
-                            <label htmlFor="senha">Senha</label>
-                            <div className="input-wrapper">
-                                <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                                <input 
-                                    type="password" id="senha" 
-                                    placeholder="••••••••" 
-                                    autoComplete="current-password" 
-                                    required 
-                                    className={erros.senha ? 'has-error' : ''}
-                                    value={senha}
-                                    onChange={e => {
-                                        setSenha(e.target.value);
-                                        if(erros.senha) setErros(prev => ({...prev, senha: ''}));
-                                    }}
-                                />
-                            </div>
-                            <span className="input-error" id="senha-erro">{erros.senha}</span>
-                        </div>
-
-                        <div className="input-group">
-                            <label htmlFor="cpf">CPF</label>
-                            <div className="input-wrapper">
-                                <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                <input 
-                                    type="text" id="cpf" 
-                                    placeholder="000.000.000-00" 
-                                    autoComplete="off" 
-                                    required 
-                                    className={erros.cpf ? 'has-error' : ''}
-                                    value={cpf}
-                                    onChange={handleCpfChange}
-                                />
-                            </div>
-                            <span className="input-error" id="cpf-erro">{erros.cpf}</span>
-                        </div>
-
-                        <button type="submit" className="btn-entrar">
-                            Entrar
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </button>
-                    </form>
-
-                    <div className="form-footer">
-                        <span>Não tem conta?</span>
-                        <a href="#" className="link-cadastro">Criar conta</a>
-                    </div>
-                </div>
+            <div className="stat">
+              <CountUp
+                from={0}
+                to={967}
+                separator=","
+                direction="up"
+                duration={1}
+                className="stat-number count-up-text"
+                startCounting={false}
+              />
+              <span className="stat-label">Usuários</span>
             </div>
+
+            <div className="stat-divider"></div>
+
+            <div className="stat">
+              <CountUp
+                from={0}
+                to={89}
+                separator=","
+                direction="up"
+                duration={1}
+                className="stat-number count-up-text"
+                startCounting={false}
+              />
+              <span className="stat-label">Cidades</span>
+            </div>
+          </div>
         </div>
-    );
+      </div>
+
+      <div className="login-form-side">
+        <div className="form-container">
+          <div className="mobile-logo">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#33d17a"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+            <span>Braporte</span>
+          </div>
+
+          <h2>Entrar</h2>
+          <p className="form-subtitle">
+            Acesse para reportar e monitorar sua cidade.
+          </p>
+
+          <form id="loginForm" noValidate onSubmit={handleLogin}>
+            <div className="input-group">
+              <label htmlFor="email">E-mail</label>
+
+              <div className="input-wrapper">
+                <svg
+                  className="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M22 4l-10 8L2 4" />
+                </svg>
+
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="seu@email.com"
+                  autoComplete="username"
+                  required
+                  className={erros.email ? "has-error" : ""}
+                  value={email}
+                  onChange={handleEmailChange}
+                />
+              </div>
+
+              <span className="input-error" id="email-erro">
+                {erros.email}
+              </span>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="senha">Senha</label>
+
+              <div className="input-wrapper">
+                <svg
+                  className="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+
+                <input
+                  type="password"
+                  id="senha"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  className={erros.senha ? "has-error" : ""}
+                  value={senha}
+                  onChange={handleSenhaChange}
+                />
+              </div>
+
+              <span className="input-error" id="senha-erro">
+                {erros.senha}
+              </span>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="cpf">CPF</label>
+
+              <div className="input-wrapper">
+                <svg
+                  className="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+
+                <input
+                  type="text"
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  autoComplete="off"
+                  required
+                  className={erros.cpf ? "has-error" : ""}
+                  value={cpf}
+                  onChange={handleCpfChange}
+                />
+              </div>
+
+              <span className="input-error" id="cpf-erro">
+                {erros.cpf}
+              </span>
+            </div>
+
+            <button type="submit" className="btn-entrar">
+              Entrar
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </form>
+
+          <div className="form-footer">
+            <span>Não tem conta?</span>
+            <a href="#" className="link-cadastro">
+              Criar conta
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default LoginPage;
