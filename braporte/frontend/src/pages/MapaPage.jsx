@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Topbar from '../components/Topbar';
 import FilterChips from '../components/FilterChips';
 import ReportPopup from '../components/ReportPopup';

@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { validarEmail, validarCPF, maskCPF } from "../utils/validation";
 import "../styles/login.css";
-import CountUp from '../components/CountUp';
+import CountUp from '../components/effects/CountUp';
 
 const LoginPage = () => {
   const navigate = useNavigate();
