@@ -9,6 +9,7 @@ router.get('/config/mapbox', (req, res) => {
 });
 
 router.post('/login', authController.login);
+router.post('/register', authController.register);
 router.post('/reportes', reportController.createReport);
 router.get('/reportes', reportController.getReports);
 

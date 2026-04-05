@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api";
-import { validarEmail, validarCPF, maskCPF } from "../utils/validation";
+import { validarEmail } from "../utils/validation";
 import "../styles/login.css";
 import CountUp from '../components/effects/CountUp';
 import SplitText from "../components/effects/SplitText";
@@ -10,17 +10,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [erros, setErros] = useState({ email: "", senha: "", cpf: "" });
-
-  // Atualiza o CPF com máscara e limpa o erro do campo, se existir
-  const handleCpfChange = (e) => {
-    setCpf(maskCPF(e.target.value));
-
-    if (erros.cpf) {
-      setErros((prev) => ({ ...prev, cpf: "" }));
-    }
-  };
+  const [erros, setErros] = useState({ email: "", senha: "" });
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -42,7 +32,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const newErros = { email: "", senha: "", cpf: "" };
+    const newErros = { email: "", senha: "" };
     let valido = true;
 
     if (!validarEmail(email.trim())) {
@@ -55,16 +45,13 @@ const LoginPage = () => {
       valido = false;
     }
 
-    if (!validarCPF(cpf.trim())) {
-      newErros.cpf = "CPF inválido.";
-      valido = false;
-    }
+
 
     setErros(newErros);
 
     if (valido) {
       try {
-        await api.login(email, senha, cpf);
+        await api.login(email, senha);
         navigate("/mapa");
       } catch (err) {
         console.error(err);
@@ -254,39 +241,7 @@ const LoginPage = () => {
               </span>
             </div>
 
-            <div className="input-group">
-              <label htmlFor="cpf">CPF</label>
 
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-
-                <input
-                  type="text"
-                  id="cpf"
-                  placeholder="000.000.000-00"
-                  autoComplete="off"
-                  required
-                  className={erros.cpf ? "has-error" : ""}
-                  value={cpf}
-                  onChange={handleCpfChange}
-                />
-              </div>
-
-              <span className="input-error" id="cpf-erro">
-                {erros.cpf}
-              </span>
-            </div>
 
             <button type="submit" className="btn-entrar">
               Entrar
@@ -308,9 +263,9 @@ const LoginPage = () => {
 
           <div className="form-footer">
             <span>Não tem conta?</span>
-            <a href="#" className="link-cadastro">
+            <Link to="/cadastro" className="link-cadastro">
               Criar conta
-            </a>
+            </Link>
           </div>
         </div>
       </div>
