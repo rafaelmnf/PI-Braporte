@@ -4,6 +4,7 @@ import { api } from "../services/api";
 import { validarEmail, validarCPF, maskCPF } from "../utils/validation";
 import "../styles/login.css";
 import CountUp from '../components/effects/CountUp';
+import SplitText from "../components/effects/SplitText";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -32,6 +33,10 @@ const LoginPage = () => {
     if (erros.senha)
       setErros((prev) => ({ ...prev, senha: "" }));
   };
+
+  const handleAnimationComplete = () => {
+  console.log('All letters have animated!');
+};
 
   // Valida os campos antes de enviar o login
   const handleLogin = async (e) => {
@@ -91,7 +96,21 @@ const LoginPage = () => {
             </svg>
           </div>
 
-          <h1>Braporte</h1>
+          <SplitText
+            text="BRAPORTE"
+            className="hero-title"
+            delay={50}
+            duration={1.50}
+            ease="power3.out"
+            splitType="chars"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.1}
+            rootMargin="-100px"
+            textAlign="center"
+            onLetterAnimationComplete={handleAnimationComplete}
+            showCallback
+          />
           <p className="hero-tagline">Mapa de Segurança Urbana Colaborativo</p>
 
           <div className="hero-stats">

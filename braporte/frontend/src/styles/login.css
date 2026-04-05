@@ -72,6 +72,7 @@ html, body {
     padding: 40px;
 }
 
+
 .hero-icon {
     width: 80px;
     height: 80px;
@@ -91,10 +92,10 @@ html, body {
     50% { transform: translateY(-8px); }
 }
 
-.hero-content h1 {
+.hero-title {
+    color: #33d17a;
     font-size: 3rem;
     font-weight: 800;
-    color: var(--text-primary);
     letter-spacing: -1px;
     margin-bottom: 8px;
 }

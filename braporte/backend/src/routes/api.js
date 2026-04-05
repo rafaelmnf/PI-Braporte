@@ -12,4 +12,21 @@ router.post('/login', authController.login);
 router.post('/reportes', reportController.createReport);
 router.get('/reportes', reportController.getReports);
 
+// Exemplo simples de uso do banco de dados direto na rota
+const db = require('../config/db');
+
+router.get('/test-db', async (req, res) => {
+    try {
+        const result = await db.query('SELECT NOW() AS data_atual;');
+        res.json({
+            status: 'sucesso',
+            mensagem: 'Conexão com banco funcionando perfeitamente!',
+            dataBanco: result.rows[0].data_atual
+        });
+    } catch (error) {
+        console.error('Erro na rota de teste do DB:', error);
+        res.status(500).json({ status: 'erro', mensagem: 'Falha ao conectar no banco' });
+    }
+});
+
 module.exports = router;

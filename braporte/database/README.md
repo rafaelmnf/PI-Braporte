@@ -1,1 +1,0 @@
-Estaremos usando PostgreSQL.
