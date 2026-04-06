@@ -1,6 +1,6 @@
-const db = require('../config/db'); // Nossa conexão banco de dados
-const bcrypt = require('bcrypt'); // Biblioteca para comparar hash
-const { generateToken } = require('../config/jwt'); // Nossa função para gerar o JWT
+const db = require('../config/db'); // db agora é nativamente o sql de postgres.js
+const bcrypt = require('bcrypt');
+const { generateToken } = require('../config/jwt');
 
 exports.login = async (req, res) => {
     try {
@@ -14,12 +14,14 @@ exports.login = async (req, res) => {
             });
         }
 
-        // 2. Buscar o usuário usando uma query parametrizada SEGURA ($1)
-        const query = 'SELECT * FROM USUARIO WHERE email = $1';
-        const result = await db.query(query, [email]);
-        const user = result.rows[0];
+        // 2. Buscar o usuário
+        // Nova sintaxe do postgres.js (Tagged template literal)
+        const result = await db`SELECT * FROM USUARIO WHERE email = ${email}`;
+        
+        // No postgres.js, result já é uma array com as linhas.
+        const user = result[0];
 
-        // Se o banco não retornou ninguém, o usuário não existe
+        // Se não retornou ninguém
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -37,7 +39,7 @@ exports.login = async (req, res) => {
             });
         }
 
-        // 4. Se a senha confere, geramos o token
+        // 4. Gerar JWT
         const token = generateToken(user);
 
         // 5. Retornar resposta
@@ -72,13 +74,12 @@ exports.register = async (req, res) => {
             });
         }
 
-        const checkQuery = 'SELECT id_usuario FROM USUARIO WHERE email = $1 OR cpf = $2';
-        // Remove os pontos e hífens do CPF pra caber no CHAR(11) do banco
         const cpfLimpo = cpf.replace(/\D/g, '');
 
-        const checkResult = await db.query(checkQuery, [email, cpfLimpo]);
+        // Validar e Checar se o id já existe usando o postgres.js
+        const checkResult = await db`SELECT id_usuario FROM USUARIO WHERE email = ${email} OR cpf = ${cpfLimpo}`;
 
-        if (checkResult.rows.length > 0) {
+        if (checkResult.length > 0) {
             return res.status(400).json({
                 success: false,
                 mensagem: 'Este e-mail ou CPF já estão cadastrados em nosso sistema.'
@@ -87,14 +88,14 @@ exports.register = async (req, res) => {
 
         const senhaHash = await bcrypt.hash(senha, 10);
 
-        const insertQuery = `
+        // Inserção usando postgres.js
+        const insertResult = await db`
             INSERT INTO USUARIO (nome_completo, email, cpf, senha_hash)
-            VALUES ($1, $2, $3, $4)
+            VALUES (${nome}, ${email}, ${cpfLimpo}, ${senhaHash})
             RETURNING id_usuario, nome_completo, email;
         `;
         
-        const insertResult = await db.query(insertQuery, [nome, email, cpfLimpo, senhaHash]);
-        const newUser = insertResult.rows[0];
+        const newUser = insertResult[0];
 
         res.status(201).json({
             success: true,
