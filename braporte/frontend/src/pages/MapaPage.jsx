@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Topbar from '../components/Topbar';
 import FilterChips from '../components/FilterChips';
 import ReportPopup from '../components/ReportPopup';
 import MapViewer from '../components/map/MapViewer';
 import ReportDetailsSheet from '../components/report/ReportDetailsSheet';
 import { api } from '../services/api';
-import { mockReports } from '../data/mockReports';
 import '../styles/mapa.css';
 
 const MapaPage = () => {
@@ -19,9 +18,21 @@ const MapaPage = () => {
         zoom: 13
     });
 
-    // Mocks e estado local dos reportes
-    const [reports, setReports] = useState(mockReports);
+    const [reports, setReports] = useState([]);
     const [selectedReport, setSelectedReport] = useState(null);
+
+    // Carregar dados da API
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                const data = await api.getReports();
+                setReports(data.reportes);
+            } catch (err) {
+                console.error("Erro ao carregar reportes", err);
+            }
+        };
+        fetchReports();
+    }, []);
 
     // Filtra localmente apenas para efeito de preview
     const displayReports = activeFilter === 'todos' 
@@ -30,24 +41,18 @@ const MapaPage = () => {
 
     const handleReportSubmit = async (data) => {
         try {
-            await api.createReport(data);
-            
-            // TODO: Quando integrar banco real, faremos fetch ao backend aqui.
-            // Aqui estamos mockando inserção no mapa pra testar evolução:
-            const novoReporte = {
-                id_reporte: Date.now(),
-                id_usuario: 1, // mock
-                status: 'aberto',
-                data_hora: new Date().toISOString(),
+            const payload = {
+                id_usuario: 1, // mock temporário para usuário logado
                 motivo: data.titulo,
                 descricao: data.descricao,
                 categoria: data.categoria,
-                // Associa coordenadas ao centro atual (Futuramente vira selecione por pino)
                 latitude: viewState.latitude, 
                 longitude: viewState.longitude,
                 endereco: 'Pino Manual (TODO)'
             };
-            setReports([novoReporte, ...reports]);
+            
+            const response = await api.createReport(payload);
+            setReports([response.reporte, ...reports]);
         } catch (error) {
             console.error(error);
         }
