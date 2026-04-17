@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { CATEGORIAS } from '../CategoryGrid';
 
-const ReportDetailsSheet = ({ report, onClose }) => {
+const ReportDetailsSheet = ({ report, onClose, onDenunciar }) => {
     
     // Suporte para fechar no ESC
     useEffect(() => {
@@ -77,10 +77,14 @@ const ReportDetailsSheet = ({ report, onClose }) => {
                 </div>
 
                 <div className="details-footer">
-                    <button className="btn-action">
-                        Apoiar Reporte
-                    </button>
-                    {/* Futuramente: Ações focadas em banco de dados, "Ver Mais", etc */}
+                    <div className="action-buttons-row">
+                        <button className="btn-action">
+                            Apoiar Reporte
+                        </button>
+                        <button className="btn-action btn-danger" onClick={() => onDenunciar(report.id_reporte)}>
+                            Denunciar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

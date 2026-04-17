@@ -655,3 +655,21 @@ html, body {
     font-weight: 700;
     cursor: pointer;
 }
+
+.action-buttons-row {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #f87171;
+    color: #fff;
+    border-color: #ef4444;
+}

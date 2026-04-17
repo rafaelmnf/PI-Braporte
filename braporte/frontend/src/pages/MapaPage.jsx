@@ -58,6 +58,18 @@ const MapaPage = () => {
         }
     };
 
+    const handleDenunciarReport = async (id_reporte) => {
+        try {
+            await api.denunciarReport(id_reporte);
+            // Remove instantaneamente da interface
+            setReports(reports.filter(r => r.id_reporte !== id_reporte));
+            setSelectedReport(null); // Fecha o popup
+        } catch (error) {
+            console.error('Erro ao denunciar o reporte', error);
+            alert('Não foi possível denunciar este reporte no momento.');
+        }
+    };
+
     return (
         <>
             <Topbar 
@@ -116,6 +128,7 @@ const MapaPage = () => {
             <ReportDetailsSheet 
                 report={selectedReport} 
                 onClose={() => setSelectedReport(null)} 
+                onDenunciar={handleDenunciarReport}
             />
         </>
     );

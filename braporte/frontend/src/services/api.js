@@ -41,6 +41,14 @@ export const api = {
         return response.json();
     },
 
+    async denunciarReport(id) {
+        const response = await fetch(`${API_URL}/reportes/${id}/denunciar`, {
+            method: 'PATCH'
+        });
+        if (!response.ok) throw new Error('Erro ao denunciar reporte');
+        return response.json();
+    },
+
     async getMapConfig() {
         const response = await fetch(`${API_URL}/config/mapbox`);
         if (!response.ok) throw new Error('Erro ao buscar config do mapa');
