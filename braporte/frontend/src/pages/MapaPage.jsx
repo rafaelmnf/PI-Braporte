@@ -70,6 +70,15 @@ const MapaPage = () => {
         }
     };
 
+    const handleStatusUpdated = (id_reporte, novoStatus) => {
+        setReports(reports.map(r => 
+            r.id_reporte === id_reporte ? { ...r, status: novoStatus } : r
+        ));
+        if (selectedReport && selectedReport.id_reporte === id_reporte) {
+            setSelectedReport({ ...selectedReport, status: novoStatus });
+        }
+    };
+
     return (
         <>
             <Topbar 
@@ -129,6 +138,7 @@ const MapaPage = () => {
                 report={selectedReport} 
                 onClose={() => setSelectedReport(null)} 
                 onDenunciar={handleDenunciarReport}
+                onStatusUpdated={handleStatusUpdated}
             />
         </>
     );

@@ -53,5 +53,21 @@ export const api = {
         const response = await fetch(`${API_URL}/config/mapbox`);
         if (!response.ok) throw new Error('Erro ao buscar config do mapa');
         return response.json();
+    },
+
+    async getAtualizacoes(id) {
+        const response = await fetch(`${API_URL}/reportes/${id}/atualizacoes`);
+        if (!response.ok) throw new Error('Erro ao buscar atualizações');
+        return response.json();
+    },
+
+    async atualizarStatus(id, id_usuario, tipo_contribuicao) {
+        const response = await fetch(`${API_URL}/reportes/${id}/atualizar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_usuario, tipo_contribuicao })
+        });
+        if (!response.ok) throw new Error('Erro ao atualizar status');
+        return response.json();
     }
 };
