@@ -17,7 +17,7 @@ exports.login = async (req, res) => {
         // 2. Buscar o usuário
         // Nova sintaxe do postgres.js (Tagged template literal)
         const result = await db`SELECT * FROM USUARIO WHERE email = ${email}`;
-        
+
         // No postgres.js, result já é uma array com as linhas.
         const user = result[0];
 
@@ -70,7 +70,7 @@ exports.register = async (req, res) => {
         if (!nome || !email || !cpf || !senha || !telefone || !cep || !rua || !numero || !cidade || !estado) {
             return res.status(400).json({
                 success: false,
-                mensagem: 'Todos os campos obrigatórios (incluindo endereço e telefone) devem ser preenchidos.'
+                mensagem: 'Todos os campos são obrigatórios.'
             });
         }
 
@@ -96,7 +96,7 @@ exports.register = async (req, res) => {
             VALUES (${nome}, ${email}, ${cpfLimpo}, ${senhaHash}, ${telLimpo})
             RETURNING id_usuario, nome_completo, email;
         `;
-        
+
         const newUser = insertResult[0];
 
         // Inserção na tabela endereco
