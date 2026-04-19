@@ -11,11 +11,11 @@ export const api = {
         return response.json();
     },
 
-    async register(nome, email, cpf, senha) {
+    async register(nome, email, cpf, senha, telefone, cep, rua, numero, complemento, cidade, estado) {
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, email, cpf, senha })
+            body: JSON.stringify({ nome, email, cpf, senha, telefone, cep, rua, numero, complemento, cidade, estado })
         });
         
         const data = await response.json();

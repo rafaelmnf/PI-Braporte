@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api";
-import { validarEmail, validarCPF, maskCPF } from "../utils/validation";
+import { validarEmail, validarCPF, maskCPF, maskTelefone, maskCEP } from "../utils/validation";
 import "../styles/login.css";
 import CountUp from "../components/effects/CountUp";
 import SplitText from "../components/effects/SplitText";
@@ -11,8 +11,18 @@ const CadastroPage = () => {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmaSenha, setConfirmaSenha] = useState("");
+  
+  // Endereco
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+
   const [erros, setErros] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -21,6 +31,40 @@ const CadastroPage = () => {
   const handleCpfChange = (e) => {
     setCpf(maskCPF(e.target.value));
     if (erros.cpf) setErros((prev) => ({ ...prev, cpf: "" }));
+  };
+
+  const handleTelefoneChange = (e) => {
+    setTelefone(maskTelefone(e.target.value));
+    if (erros.telefone) setErros((prev) => ({ ...prev, telefone: "" }));
+  };
+
+  const buscarCep = async (cepBuscado) => {
+    const cepNumeros = cepBuscado.replace(/\D/g, "");
+    if (cepNumeros.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepNumeros}/json/`);
+        const data = await response.json();
+        if (!data.erro) {
+          setRua(data.logradouro || "");
+          setCidade(data.localidade || "");
+          setEstado(data.uf || "");
+          if (erros.rua || erros.cidade || erros.estado) {
+            setErros((prev) => ({ ...prev, rua: "", cidade: "", estado: "" }));
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP:", err);
+      }
+    }
+  };
+
+  const handleCEPChange = (e) => {
+    const novoCep = maskCEP(e.target.value);
+    setCep(novoCep);
+    if (erros.cep) setErros((prev) => ({ ...prev, cep: "" }));
+    if (novoCep.replace(/\D/g, "").length === 8) {
+      buscarCep(novoCep);
+    }
   };
 
   const handleChange = (setter, field) => (e) => {
@@ -51,6 +95,20 @@ const CadastroPage = () => {
       valido = false;
     }
 
+    if (telefone.replace(/\D/g, "").length < 10) {
+      newErros.telefone = "Telefone inválido.";
+      valido = false;
+    }
+
+    if (cep.replace(/\D/g, "").length < 8) {
+      newErros.cep = "CEP inválido.";
+      valido = false;
+    }
+    if (!rua.trim()) { newErros.rua = "Rua é obrigatória."; valido = false; }
+    if (!numero.trim()) { newErros.numero = "Número é obrigatório."; valido = false; }
+    if (!cidade.trim()) { newErros.cidade = "Cidade é obrigatória."; valido = false; }
+    if (!estado.trim()) { newErros.estado = "Estado é obrigatório."; valido = false; }
+
     if (senha.trim().length < 6) {
       newErros.senha = "Senha deve ter no mínimo 6 caracteres.";
       valido = false;
@@ -69,7 +127,19 @@ const CadastroPage = () => {
         setApiError("");
         setSuccessMsg("");
 
-        await api.register(nome.trim(), email.trim(), cpf.trim(), senha);
+        await api.register(
+            nome.trim(), 
+            email.trim(), 
+            cpf.trim(), 
+            senha,
+            telefone.trim(),
+            cep.trim(),
+            rua.trim(),
+            numero.trim(),
+            complemento.trim(),
+            cidade.trim(),
+            estado.trim()
+        );
 
         setSuccessMsg("Conta criada com sucesso! Redirecionando...");
         setTimeout(() => {
@@ -141,7 +211,7 @@ const CadastroPage = () => {
       </div>
 
       <div className="login-form-side">
-        <div className="form-container" style={{ maxWidth: "400px" }}>
+        <div className="form-container" style={{ maxWidth: "500px" }}>
           <div className="mobile-logo">
             <svg
               width="32"
@@ -197,143 +267,208 @@ const CadastroPage = () => {
           )}
 
           <form id="registerForm" noValidate onSubmit={handleRegister}>
-            <div className="input-group" style={{ marginBottom: "15px" }}>
-              <label htmlFor="nome">Nome Completo</label>
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <input
-                  type="text"
-                  id="nome"
-                  placeholder="Seu nome"
-                  required
-                  className={erros.nome ? "has-error" : ""}
-                  value={nome}
-                  onChange={handleChange(setNome, "nome")}
-                />
-              </div>
-              <span className="input-error">{erros.nome}</span>
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                <label htmlFor="nome">Nome Completo</label>
+                <div className="input-wrapper">
+                    <input
+                    type="text"
+                    id="nome"
+                    placeholder="Seu nome"
+                    required
+                    className={erros.nome ? "has-error" : ""}
+                    value={nome}
+                    onChange={handleChange(setNome, "nome")}
+                    />
+                </div>
+                <span className="input-error">{erros.nome}</span>
+                </div>
+
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                <label htmlFor="cpf">CPF</label>
+                <div className="input-wrapper">
+                    <input
+                    type="text"
+                    id="cpf"
+                    placeholder="000.000.000-00"
+                    required
+                    className={erros.cpf ? "has-error" : ""}
+                    value={cpf}
+                    onChange={handleCpfChange}
+                    />
+                </div>
+                <span className="input-error">{erros.cpf}</span>
+                </div>
             </div>
 
-            <div className="input-group" style={{ marginBottom: "15px" }}>
-              <label htmlFor="email">E-mail</label>
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="M22 4l-10 8L2 4" />
-                </svg>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="seu@email.com"
-                  required
-                  className={erros.email ? "has-error" : ""}
-                  value={email}
-                  onChange={handleChange(setEmail, "email")}
-                />
-              </div>
-              <span className="input-error">{erros.email}</span>
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                <label htmlFor="email">E-mail</label>
+                <div className="input-wrapper">
+                    <input
+                    type="email"
+                    id="email"
+                    placeholder="seu@email.com"
+                    required
+                    className={erros.email ? "has-error" : ""}
+                    value={email}
+                    onChange={handleChange(setEmail, "email")}
+                    />
+                </div>
+                <span className="input-error">{erros.email}</span>
+                </div>
+
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                <label htmlFor="telefone">Telefone</label>
+                <div className="input-wrapper">
+                    <input
+                    type="text"
+                    id="telefone"
+                    placeholder="(00) 00000-0000"
+                    required
+                    className={erros.telefone ? "has-error" : ""}
+                    value={telefone}
+                    onChange={handleTelefoneChange}
+                    />
+                </div>
+                <span className="input-error">{erros.telefone}</span>
+                </div>
             </div>
 
-            <div className="input-group" style={{ marginBottom: "15px" }}>
-              <label htmlFor="cpf">CPF</label>
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <path d="M7 8h10M7 12h10M7 16h10" />
-                </svg>
-                <input
-                  type="text"
-                  id="cpf"
-                  placeholder="000.000.000-00"
-                  required
-                  className={erros.cpf ? "has-error" : ""}
-                  value={cpf}
-                  onChange={handleCpfChange}
-                />
-              </div>
-              <span className="input-error">{erros.cpf}</span>
+            <h4 style={{ margin: "10px 0", color: "#666" }}>Endereço</h4>
+
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                    <label htmlFor="cep">CEP</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="cep"
+                        placeholder="00000-000"
+                        required
+                        className={erros.cep ? "has-error" : ""}
+                        value={cep}
+                        onChange={handleCEPChange}
+                        />
+                    </div>
+                    <span className="input-error">{erros.cep}</span>
+                </div>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 2 }}>
+                    <label htmlFor="rua">Rua</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="rua"
+                        placeholder="Nome da rua"
+                        required
+                        className={erros.rua ? "has-error" : ""}
+                        value={rua}
+                        onChange={handleChange(setRua, "rua")}
+                        />
+                    </div>
+                    <span className="input-error">{erros.rua}</span>
+                </div>
             </div>
 
-            <div className="input-group" style={{ marginBottom: "15px" }}>
-              <label htmlFor="senha">Senha</label>
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <input
-                  type="password"
-                  id="senha"
-                  placeholder="Mínimo 6 caracteres"
-                  required
-                  className={erros.senha ? "has-error" : ""}
-                  value={senha}
-                  onChange={handleChange(setSenha, "senha")}
-                />
-              </div>
-              <span className="input-error">{erros.senha}</span>
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                    <label htmlFor="numero">Número</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="numero"
+                        placeholder="123"
+                        required
+                        className={erros.numero ? "has-error" : ""}
+                        value={numero}
+                        onChange={handleChange(setNumero, "numero")}
+                        />
+                    </div>
+                    <span className="input-error">{erros.numero}</span>
+                </div>
+
+                <div className="input-group" style={{ marginBottom: "15px", flex: 2 }}>
+                    <label htmlFor="complemento">Complemento (Opcional)</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="complemento"
+                        placeholder="Apto, Sala, etc."
+                        value={complemento}
+                        onChange={handleChange(setComplemento, "complemento")}
+                        />
+                    </div>
+                </div>
             </div>
 
-            <div className="input-group" style={{ marginBottom: "24px" }}>
-              <label htmlFor="confirmaSenha">Confirmar Senha</label>
-              <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <input
-                  type="password"
-                  id="confirmaSenha"
-                  placeholder="Repita sua senha"
-                  required
-                  className={erros.confirmaSenha ? "has-error" : ""}
-                  value={confirmaSenha}
-                  onChange={handleChange(setConfirmaSenha, "confirmaSenha")}
-                />
-              </div>
-              <span className="input-error">{erros.confirmaSenha}</span>
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 2 }}>
+                    <label htmlFor="cidade">Cidade</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="cidade"
+                        placeholder="Sua cidade"
+                        required
+                        className={erros.cidade ? "has-error" : ""}
+                        value={cidade}
+                        onChange={handleChange(setCidade, "cidade")}
+                        />
+                    </div>
+                    <span className="input-error">{erros.cidade}</span>
+                </div>
+
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                    <label htmlFor="estado">Estado</label>
+                    <div className="input-wrapper">
+                        <input
+                        type="text"
+                        id="estado"
+                        placeholder="UF"
+                        required
+                        className={erros.estado ? "has-error" : ""}
+                        value={estado}
+                        onChange={handleChange(setEstado, "estado")}
+                        />
+                    </div>
+                    <span className="input-error">{erros.estado}</span>
+                </div>
+            </div>
+
+            <h4 style={{ margin: "10px 0", color: "#666" }}>Segurança</h4>
+
+            <div className="form-row" style={{ display: "flex", gap: "15px" }}>
+                <div className="input-group" style={{ marginBottom: "15px", flex: 1 }}>
+                <label htmlFor="senha">Senha</label>
+                <div className="input-wrapper">
+                    <input
+                    type="password"
+                    id="senha"
+                    placeholder="Mínimo 6"
+                    required
+                    className={erros.senha ? "has-error" : ""}
+                    value={senha}
+                    onChange={handleChange(setSenha, "senha")}
+                    />
+                </div>
+                <span className="input-error">{erros.senha}</span>
+                </div>
+
+                <div className="input-group" style={{ marginBottom: "24px", flex: 1 }}>
+                <label htmlFor="confirmaSenha">Confirmar</label>
+                <div className="input-wrapper">
+                    <input
+                    type="password"
+                    id="confirmaSenha"
+                    placeholder="Repita a senha"
+                    required
+                    className={erros.confirmaSenha ? "has-error" : ""}
+                    value={confirmaSenha}
+                    onChange={handleChange(setConfirmaSenha, "confirmaSenha")}
+                    />
+                </div>
+                <span className="input-error">{erros.confirmaSenha}</span>
+                </div>
             </div>
 
             <button
