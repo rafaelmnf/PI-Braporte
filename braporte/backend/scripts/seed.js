@@ -51,39 +51,50 @@ const mockReports = [
 
 async function seed() {
     try {
+        // Garantir que a tabela geolocalizacao exista (o campo id_reporte_unique deve ser adicionado via migração ou DDL)
         await sql`
-            CREATE TABLE IF NOT EXISTS reportes (
-                id_reporte SERIAL PRIMARY KEY,
-                id_usuario INT NOT NULL,
-                status VARCHAR(50) DEFAULT 'aberto',
-                data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                motivo VARCHAR(255) NOT NULL,
-                descricao TEXT,
-                categoria VARCHAR(100),
-                latitude DOUBLE PRECISION NOT NULL,
-                longitude DOUBLE PRECISION NOT NULL,
-                endereco VARCHAR(255)
+            CREATE TABLE IF NOT EXISTS geolocalizacao (
+                id_geolocalizacao SERIAL PRIMARY KEY,
+                id_reporte INT NOT NULL UNIQUE,
+                latitude NUMERIC NOT NULL,
+                longitude NUMERIC NOT NULL,
+                FOREIGN KEY (id_reporte) REFERENCES reportes(id_reporte) ON DELETE CASCADE
             );
         `;
 
-        console.log('Limpando tabela para evitar duplicatas nos dados de teste...');
+        console.log('Limpando tabelas para evitar duplicatas nos dados de teste...');
+        // O CASCADE no TRUNCATE cuidará da geolocalizacao se houver FK
         await sql`TRUNCATE TABLE reportes RESTART IDENTITY CASCADE`;
 
         console.log('Inserindo os reportes mock...');
 
         for (const report of mockReports) {
-            await sql`
+            // 1. Inserir Reporte
+            const [novoReporte] = await sql`
                 INSERT INTO reportes (
-                    id_usuario, status, data_hora, motivo, descricao, categoria, latitude, longitude, endereco
+                    id_usuario, status, data_hora, motivo, descricao, categoria, endereco
                 ) VALUES (
                     ${report.id_usuario}, ${report.status}, ${report.data_hora}, ${report.motivo},
-                    ${report.descricao}, ${report.categoria}, ${report.latitude}, ${report.longitude},
-                    ${report.endereco}
+                    ${report.descricao}, ${report.categoria}, ${report.endereco}
                 )
+                RETURNING id_reporte
+            `;
+
+            // 2. Inserir Geolocalização
+            await sql`
+                INSERT INTO geolocalizacao (id_reporte, latitude, longitude)
+                VALUES (${novoReporte.id_reporte}, ${report.latitude}, ${report.longitude})
+            `;
+
+            // 3. (Opcional para seed) Registrar como criador
+            await sql`
+                INSERT INTO usuario_reporte (id_usuario, id_reporte, tipo_contribuicao)
+                VALUES (${report.id_usuario}, ${novoReporte.id_reporte}, 'criador')
+                ON CONFLICT DO NOTHING
             `;
         }
 
-        console.log('✅ Seed completado com sucesso! Os reportes de teste foram inseridos no banco PostgreSQL.');
+        console.log('✅ Seed completado com sucesso! Os reportes de teste foram inseridos com geolocalização separada.');
     } catch (error) {
         console.error('❌ Erro durante o Seed:', error);
     } finally {

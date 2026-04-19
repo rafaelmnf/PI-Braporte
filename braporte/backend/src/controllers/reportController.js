@@ -8,27 +8,44 @@ exports.createReport = async (req, res) => {
         // Fallback p/ id_usuario se o auth ainda não injetar req.user
         const usuarioLogado = id_usuario || 1; 
 
-        const novoReporte = await sql`
-            INSERT INTO reportes (
-                id_usuario, motivo, descricao, categoria, latitude, longitude, endereco
-            ) VALUES (
-                ${usuarioLogado}, ${motivo}, ${descricao}, ${categoria}, ${latitude}, ${longitude}, ${endereco}
-            )
-            RETURNING *
-        `;
+        // Usamos uma transação para garantir que ambos os registros sejam criados
+        const resultado = await sql.begin(async sql => {
+            // 1. Inserir o reporte principal
+            const [novoReporte] = await sql`
+                INSERT INTO reportes (
+                    id_usuario, motivo, descricao, categoria, endereco
+                ) VALUES (
+                    ${usuarioLogado}, ${motivo}, ${descricao}, ${categoria}, ${endereco}
+                )
+                RETURNING *
+            `;
 
-        const reporteCriado = novoReporte[0];
+            // 2. Inserir a geolocalização vinculada
+            await sql`
+                INSERT INTO geolocalizacao (id_reporte, latitude, longitude)
+                VALUES (${novoReporte.id_reporte}, ${latitude}, ${longitude})
+            `;
 
-        // Identificar o usuário como criador na tabela associativa
-        await sql`
-            INSERT INTO usuario_reporte (id_usuario, id_reporte, tipo_contribuicao, data_contribuicao, data_atualizacao)
-            VALUES (${usuarioLogado}, ${reporteCriado.id_reporte}, 'criador', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `;
+            // 3. Identificar o usuário como criador na tabela associativa
+            await sql`
+                INSERT INTO usuario_reporte (id_usuario, id_reporte, tipo_contribuicao, data_contribuicao, data_atualizacao)
+                VALUES (${usuarioLogado}, ${novoReporte.id_reporte}, 'criador', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            `;
+
+            return novoReporte;
+        });
+
+        // Adicionamos os dados de localização de volta ao objeto para o frontend se manter compatível
+        const reporteCompleto = {
+            ...resultado,
+            latitude,
+            longitude
+        };
 
         res.status(201).json({ 
             sucesso: true, 
             mensagem: 'Reporte criado com sucesso', 
-            reporte: reporteCriado
+            reporte: reporteCompleto
         });
     } catch (err) {
         console.error('Erro ao criar reporte:', err);
@@ -38,7 +55,13 @@ exports.createReport = async (req, res) => {
 
 exports.getReports = async (req, res) => {
     try {
-        const reportes = await sql`SELECT * FROM reportes WHERE status != 'denunciado' ORDER BY data_hora DESC`;
+        const reportes = await sql`
+            SELECT r.*, g.latitude, g.longitude 
+            FROM reportes r
+            LEFT JOIN geolocalizacao g ON r.id_reporte = g.id_reporte
+            WHERE r.status != 'denunciado' 
+            ORDER BY r.data_hora DESC
+        `;
         res.status(200).json({ reportes });
     } catch (err) {
         console.error('Erro ao buscar reportes:', err);
