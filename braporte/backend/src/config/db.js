@@ -3,7 +3,7 @@ const postgres = require('postgres');
 // O postgres.js é super inteligente e recebe o DATABASE_URL automaticamente.
 // Definimos o ssl: 'require' para garantir aceite pela rede do Supabase se necessário.
 const sql = postgres(process.env.DATABASE_URL, {
-    ssl: 'prefer', 
+    ssl: 'require', 
     max: 10,                 
     idle_timeout: 20        
 });

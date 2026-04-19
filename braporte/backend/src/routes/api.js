@@ -12,6 +12,7 @@ router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.post('/reportes', reportController.createReport);
 router.get('/reportes', reportController.getReports);
+router.patch('/reportes/:id/denunciar', reportController.denunciarReport);
 
 
 module.exports = router;
