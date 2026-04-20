@@ -241,7 +241,11 @@ const LoginPage = () => {
               </span>
             </div>
 
-
+            <div style={{ textAlign: "right", marginBottom: "16px", marginTop: "-8px" }}>
+              <Link to="/esqueci-senha" className="link-cadastro" style={{ fontSize: "0.85rem", fontWeight: "600" }}>
+                Esqueceu a senha?
+              </Link>
+            </div>
 
             <button type="submit" className="btn-entrar">
               Entrar
