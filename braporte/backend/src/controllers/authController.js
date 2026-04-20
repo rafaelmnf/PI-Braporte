@@ -17,7 +17,7 @@ exports.login = async (req, res) => {
         // 2. Buscar o usuário
         // Nova sintaxe do postgres.js (Tagged template literal)
         const result = await db`SELECT * FROM USUARIO WHERE email = ${email}`;
-        
+
         // No postgres.js, result já é uma array com as linhas.
         const user = result[0];
 
@@ -65,9 +65,9 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
-        const { nome, email, cpf, senha } = req.body;
+        const { nome, email, cpf, senha, telefone, cep, rua, numero, complemento, cidade, estado } = req.body;
 
-        if (!nome || !email || !cpf || !senha) {
+        if (!nome || !email || !cpf || !senha || !telefone || !cep || !rua || !numero || !cidade || !estado) {
             return res.status(400).json({
                 success: false,
                 mensagem: 'Todos os campos são obrigatórios.'
@@ -75,6 +75,8 @@ exports.register = async (req, res) => {
         }
 
         const cpfLimpo = cpf.replace(/\D/g, '');
+        const telLimpo = telefone.replace(/\D/g, '');
+        const cepLimpo = cep.replace(/\D/g, '');
 
         // Validar e Checar se o id já existe usando o postgres.js
         const checkResult = await db`SELECT id_usuario FROM USUARIO WHERE email = ${email} OR cpf = ${cpfLimpo}`;
@@ -88,14 +90,20 @@ exports.register = async (req, res) => {
 
         const senhaHash = await bcrypt.hash(senha, 10);
 
-        // Inserção usando postgres.js
+        // Inserção do usuário contendo o telefone
         const insertResult = await db`
-            INSERT INTO USUARIO (nome_completo, email, cpf, senha_hash)
-            VALUES (${nome}, ${email}, ${cpfLimpo}, ${senhaHash})
+            INSERT INTO USUARIO (nome_completo, email, cpf, senha_hash, telefone)
+            VALUES (${nome}, ${email}, ${cpfLimpo}, ${senhaHash}, ${telLimpo})
             RETURNING id_usuario, nome_completo, email;
         `;
-        
+
         const newUser = insertResult[0];
+
+        // Inserção na tabela endereco
+        await db`
+            INSERT INTO ENDERECO (id_usuario, rua, numero, complemento, cep, cidade, estado)
+            VALUES (${newUser.id_usuario}, ${rua}, ${numero}, ${complemento || null}, ${cepLimpo}, ${cidade}, ${estado})
+        `;
 
         res.status(201).json({
             success: true,
