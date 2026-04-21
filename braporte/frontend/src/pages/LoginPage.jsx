@@ -51,7 +51,13 @@ const LoginPage = () => {
 
     if (valido) {
       try {
-        await api.login(email, senha);
+        const response = await api.login(email, senha);
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
+        if (response.usuario) {
+          localStorage.setItem('user', JSON.stringify(response.usuario));
+        }
         navigate("/mapa");
       } catch (err) {
         console.error(err);
