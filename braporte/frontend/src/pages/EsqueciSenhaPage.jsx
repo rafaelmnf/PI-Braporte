@@ -12,6 +12,7 @@ const EsqueciSenhaPage = () => {
   const [senha, setSenha] = useState("");
   const [confirmaSenha, setConfirmaSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
   const [loading, setLoading] = useState(false);
 
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
@@ -49,6 +50,23 @@ const EsqueciSenhaPage = () => {
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace" && otp[index] === "" && index > 0) {
       otpRefs[index - 1].current.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain").trim();
+    const digits = pastedData.replace(/\D/g, "").slice(0, 6);
+    
+    if (digits.length > 0) {
+      const newOtp = [...otp];
+      for (let i = 0; i < digits.length; i++) {
+        newOtp[i] = digits[i];
+      }
+      setOtp(newOtp);
+      
+      const focusIndex = digits.length < 6 ? digits.length : 5;
+      otpRefs[focusIndex].current.focus();
     }
   };
 
@@ -90,6 +108,22 @@ const EsqueciSenhaPage = () => {
       navigate("/login");
     } catch (err) {
       setErro(err.message || "Erro ao redefinir a senha.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (loading) return;
+    setErro("");
+    setSucesso("");
+    setLoading(true);
+    try {
+      await api.forgotPassword(email.trim());
+      setSucesso("Código reenviado com sucesso!");
+      setTimeout(() => setSucesso(""), 5000);
+    } catch (err) {
+      setErro(err.message || "Erro ao reenviar código.");
     } finally {
       setLoading(false);
     }
@@ -176,11 +210,13 @@ const EsqueciSenhaPage = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={handleOtpPaste}
                       ref={otpRefs[index]}
                     />
                   ))}
                 </div>
                 {erro && <span className="input-error" style={{ textAlign: 'center', display: 'block', marginBottom: '16px' }}>{erro}</span>}
+                {sucesso && <span className="input-success" style={{ color: '#10b981', textAlign: 'center', display: 'block', marginBottom: '16px', fontSize: '0.875rem' }}>{sucesso}</span>}
 
                 <button type="submit" className="btn-entrar" disabled={loading}>
                   {loading ? 'Verificando...' : 'Continuar'}
@@ -188,7 +224,7 @@ const EsqueciSenhaPage = () => {
               </form>
 
               <div className="resend-link">
-                Não recebeu o código? <span>Reenviar código</span>
+                Não recebeu o código? <span onClick={handleResendCode} style={{ cursor: loading ? 'not-allowed' : 'pointer', textDecoration: 'underline' }}>Reenviar código</span>
               </div>
             </div>
           )}
