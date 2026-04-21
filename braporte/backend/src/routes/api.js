@@ -10,6 +10,10 @@ router.get('/config/mapbox', (req, res) => {
 
 router.post('/login', authController.login);
 router.post('/register', authController.register);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/reset-password', authController.resetPassword);
+
 router.post('/reportes', reportController.createReport);
 router.get('/reportes', reportController.getReports);
 router.patch('/reportes/:id/denunciar', reportController.denunciarReport);

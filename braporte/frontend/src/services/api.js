@@ -25,6 +25,39 @@ export const api = {
         return data;
     },
 
+    async forgotPassword(email) {
+        const response = await fetch(`${API_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.mensagem || 'Erro ao solicitar redefinição');
+        return data;
+    },
+
+    async verifyOtp(email, otp) {
+        const response = await fetch(`${API_URL}/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.mensagem || 'Erro ao verificar código');
+        return data;
+    },
+
+    async resetPassword(email, otp, novaSenha) {
+        const response = await fetch(`${API_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp, novaSenha })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.mensagem || 'Erro ao redefinir senha');
+        return data;
+    },
+
     async createReport(dados) {
         const response = await fetch(`${API_URL}/reportes`, {
             method: 'POST',
