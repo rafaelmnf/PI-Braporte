@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { validarEmail } from "../utils/validation";
+import { api } from "../services/api";
 import "../styles/login.css";
 
 const EsqueciSenhaPage = () => {
@@ -11,18 +12,26 @@ const EsqueciSenhaPage = () => {
   const [senha, setSenha] = useState("");
   const [confirmaSenha, setConfirmaSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!validarEmail(email.trim())) {
       setErro("E-mail inválido.");
       return;
     }
     setErro("");
-    // Simulate API call to send code
-    setStep(2);
+    setLoading(true);
+    try {
+      await api.forgotPassword(email.trim());
+      setStep(2);
+    } catch (err) {
+      setErro(err.message || "Erro ao solicitar código.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOtpChange = (index, value) => {
@@ -43,7 +52,7 @@ const EsqueciSenhaPage = () => {
     }
   };
 
-  const handleOtpSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 6) {
@@ -51,11 +60,18 @@ const EsqueciSenhaPage = () => {
       return;
     }
     setErro("");
-    // Simulate API call to verify code
-    setStep(3);
+    setLoading(true);
+    try {
+      await api.verifyOtp(email.trim(), code);
+      setStep(3);
+    } catch (err) {
+      setErro(err.message || "Código inválido ou expirado.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (senha.length < 6) {
       setErro("A senha deve ter no mínimo 6 caracteres.");
@@ -66,9 +82,17 @@ const EsqueciSenhaPage = () => {
       return;
     }
     setErro("");
-    // Simulate API call to reset password
-    alert("Senha redefinida com sucesso!");
-    navigate("/login");
+    setLoading(true);
+    const code = otp.join("");
+    try {
+      await api.resetPassword(email.trim(), code, senha);
+      alert("Senha redefinida com sucesso!");
+      navigate("/login");
+    } catch (err) {
+      setErro(err.message || "Erro ao redefinir a senha.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -110,8 +134,8 @@ const EsqueciSenhaPage = () => {
                   {erro && <span className="input-error">{erro}</span>}
                 </div>
 
-                <button type="submit" className="btn-entrar">
-                  Enviar Código
+                <button type="submit" className="btn-entrar" disabled={loading}>
+                  {loading ? 'Enviando...' : 'Enviar Código'}
                 </button>
               </form>
 
@@ -158,8 +182,8 @@ const EsqueciSenhaPage = () => {
                 </div>
                 {erro && <span className="input-error" style={{ textAlign: 'center', display: 'block', marginBottom: '16px' }}>{erro}</span>}
 
-                <button type="submit" className="btn-entrar">
-                  Continuar
+                <button type="submit" className="btn-entrar" disabled={loading}>
+                  {loading ? 'Verificando...' : 'Continuar'}
                 </button>
               </form>
 
@@ -220,8 +244,8 @@ const EsqueciSenhaPage = () => {
                   {erro && <span className="input-error">{erro}</span>}
                 </div>
 
-                <button type="submit" className="btn-entrar" style={{ marginBottom: '12px' }}>
-                  Redefinir Senha
+                <button type="submit" className="btn-entrar" style={{ marginBottom: '12px' }} disabled={loading}>
+                  {loading ? 'Redefinindo...' : 'Redefinir Senha'}
                 </button>
                 
                 <button type="button" onClick={() => navigate('/login')} className="btn-entrar btn-secondary">
