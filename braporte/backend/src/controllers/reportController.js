@@ -71,23 +71,41 @@ exports.getReports = async (req, res) => {
 
 exports.denunciarReport = async (req, res) => {
     const { id } = req.params;
+    const { id_usuario } = req.body;
 
     try {
-        const reporteAtualizado = await sql`
-            UPDATE reportes
-            SET status = 'denunciado'
-            WHERE id_reporte = ${id}
-            RETURNING *
-        `;
+        const usuarioLogado = id_usuario || 1;
 
-        if (reporteAtualizado.length === 0) {
+        const resultado = await sql.begin(async sql => {
+            const [reporteAtualizado] = await sql`
+                UPDATE reportes
+                SET status = 'denunciado'
+                WHERE id_reporte = ${id}
+                RETURNING *
+            `;
+
+            if (reporteAtualizado) {
+                await sql`
+                    INSERT INTO usuario_reporte (id_usuario, id_reporte, tipo_contribuicao, data_contribuicao, data_atualizacao)
+                    VALUES (${usuarioLogado}, ${id}, 'denuncia', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id_usuario, id_reporte) 
+                    DO UPDATE SET 
+                        tipo_contribuicao = 'denuncia',
+                        data_atualizacao = CURRENT_TIMESTAMP
+                `;
+            }
+
+            return reporteAtualizado;
+        });
+
+        if (!resultado) {
             return res.status(404).json({ error: 'Reporte não encontrado' });
         }
 
         res.status(200).json({ 
             sucesso: true, 
             mensagem: 'Reporte denunciado com sucesso', 
-            reporte: reporteAtualizado[0]
+            reporte: resultado
         });
     } catch (err) {
         console.error('Erro ao denunciar reporte:', err);

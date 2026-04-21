@@ -41,8 +41,11 @@ const MapaPage = () => {
 
     const handleReportSubmit = async (data) => {
         try {
+            const userStr = localStorage.getItem('user');
+            const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
+
             const payload = {
-                id_usuario: 1, // mock temporário para usuário logado
+                id_usuario: idUsuario,
                 motivo: data.titulo,
                 descricao: data.descricao,
                 categoria: data.categoria,
@@ -60,7 +63,9 @@ const MapaPage = () => {
 
     const handleDenunciarReport = async (id_reporte) => {
         try {
-            await api.denunciarReport(id_reporte);
+            const userStr = localStorage.getItem('user');
+            const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
+            await api.denunciarReport(id_reporte, idUsuario);
             // Remove instantaneamente da interface
             setReports(reports.filter(r => r.id_reporte !== id_reporte));
             setSelectedReport(null); // Fecha o popup

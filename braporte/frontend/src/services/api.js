@@ -41,9 +41,11 @@ export const api = {
         return response.json();
     },
 
-    async denunciarReport(id) {
+    async denunciarReport(id, id_usuario) {
         const response = await fetch(`${API_URL}/reportes/${id}/denunciar`, {
-            method: 'PATCH'
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_usuario })
         });
         if (!response.ok) throw new Error('Erro ao denunciar reporte');
         return response.json();
