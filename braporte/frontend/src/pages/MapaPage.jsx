@@ -21,17 +21,44 @@ const MapaPage = () => {
     const [reports, setReports] = useState([]);
     const [selectedReport, setSelectedReport] = useState(null);
 
-    // Carregar dados da API
+    // Carregar dados da API e localização do usuário
     useEffect(() => {
-        const fetchReports = async () => {
+        const fetchInitialData = async () => {
             try {
+                // 1. Carregar reportes
                 const data = await api.getReports();
                 setReports(data.reportes);
+
+                // 2. Tentar buscar o endereço do usuário logado e centralizar o mapa
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    try {
+                        const addressResponse = await api.getUserAddress(user.id_usuario);
+                        if (addressResponse.success && addressResponse.endereco) {
+                            const { rua, numero, cidade, estado } = addressResponse.endereco;
+                            const addressString = `${rua}, ${numero}, ${cidade}, ${estado}, Brasil`;
+                            
+                            const geoData = await api.geocode(addressString);
+                            if (geoData.features && geoData.features.length > 0) {
+                                const [lng, lat] = geoData.features[0].center;
+                                setViewState(prev => ({
+                                    ...prev,
+                                    latitude: lat,
+                                    longitude: lng,
+                                    zoom: 15
+                                }));
+                            }
+                        }
+                    } catch (geoErr) {
+                        console.error("Erro ao buscar endereço ou geolocalizar:", geoErr);
+                    }
+                }
             } catch (err) {
-                console.error("Erro ao carregar reportes", err);
+                console.error("Erro ao carregar reportes:", err);
             }
         };
-        fetchReports();
+        fetchInitialData();
     }, []);
 
     // Filtra localmente apenas para efeito de preview
@@ -84,6 +111,28 @@ const MapaPage = () => {
         }
     };
 
+    const handleLocateMe = () => {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setViewState(prev => ({
+                        ...prev,
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        zoom: 16
+                    }));
+                },
+                (error) => {
+                    console.error('Erro ao acessar localização:', error);
+                    alert('Não foi possível obter a sua localização atual. Verifique as permissões do navegador.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            alert('A geolocalização não é suportada por este navegador.');
+        }
+    };
+
     return (
         <>
             <Topbar 
@@ -105,9 +154,7 @@ const MapaPage = () => {
                     className="fab fab-secondary" 
                     id="locateBtn" 
                     aria-label="Minha localização" 
-                    onClick={() => {
-                        console.log('TODO: Implementar GPS real via navigator.geolocation');
-                    }}
+                    onClick={handleLocateMe}
                 >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <circle cx="12" cy="12" r="3"/>

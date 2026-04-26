@@ -2,11 +2,14 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const reportController = require('../controllers/reportController');
+const userController = require('../controllers/userController');
 
 // Serve a configuração do Mapbox para o Frontend
 router.get('/config/mapbox', (req, res) => {
     res.json({ token: process.env.MAPBOX_TOKEN || '' });
 });
+
+router.get('/usuarios/:id/endereco', userController.getUserAddress);
 
 router.post('/login', authController.login);
 router.post('/register', authController.register);
