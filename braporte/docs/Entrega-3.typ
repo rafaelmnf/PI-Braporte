@@ -65,7 +65,7 @@ A navegação foi estruturada de forma fluída no frontend, gerenciando as trans
 
 == Organização
 
-O código do Front-End foi desenvolvido utilizando React e estruturado de maneira modular. No diretório `frontend/src`, o projeto está dividido em subdiretórios bem definidos: `components/` abriga os componentes visuais reutilizáveis (como botões, formulários de reporte e modais), `pages/` concentra as views principais (como a página de Login, Cadastro e o Mapa Principal) atuando como contêineres, e `utils/` contém lógicas utilitárias e funções de validação de dados independentes da UI. Essa separação visa facilitar a manutenção, clareza e o reuso de código.
+O código do Front-End foi desenvolvido utilizando React e estruturado sob os princípios **SOLID** e **DRY**. A organização em subdiretórios no `frontend/src` reflete o Princípio da Responsabilidade Única (SRP): `components/` gerencia exclusivamente componentes visuais reutilizáveis, `pages/` lida com a composição de telas e estado local, e `services/` centraliza as chamadas à API, evitando a duplicação de lógica de busca de dados (DRY). Essa arquitetura modular facilita a manutenção e garante que alterações em uma parte da interface não causem efeitos colaterais inesperados em outras.
 
 == Prints da Execução
 
@@ -75,11 +75,14 @@ _[NOTA: Inserir aqui as imagens/capturas de tela das principais telas do aplicat
 
 == Estrutura das Rotas
 
-O Back-End foi arquitetado de forma modular em Node.js com o framework Express. O sistema segue o padrão de API REST. As requisições chegam no servidor e são repassadas ao diretório `routes/`. Nele, cada entidade do sistema tem seu próprio arquivo de rotas (ex: usuários, reportes, geolocalização), que recebem as chamadas HTTP e as delegam para os respectivos controladores responsáveis pela lógica de negócio.
+O Back-End foi totalmente refatorado para seguir uma arquitetura em camadas, aplicando rigorosamente os princípios **SOLID** e **DRY**. O fluxo das requisições agora segue um caminho bem definido: as rotas no diretório `routes/` recebem a chamada e a encaminham para o respectivo **Controller**, que atua apenas como uma ponte de entrada/saída (HTTP), delegando toda a regra de negócio para a camada de **Service**, que por sua vez utiliza o **Repository** para persistência de dados. Essa separação garante que cada arquivo tenha uma única responsabilidade clara.
 
 == Controllers implementados
 
-Destacam-se os controladores como `reportController.js`, que centraliza a lógica de negócios para a criação e listagem de ocorrências, tratando simultaneamente a persistência de geolocalização, formatação de imagens em Base64 para binário (BYTEA), e associação de usuários de forma transacional.
+Para garantir um código limpo e escalável, a implementação foi dividida em três camadas fundamentais:
+- **Controllers:** (ex: `authController.js`, `reportController.js`) Responsáveis apenas por validar a entrada da requisição e formatar a resposta enviada ao usuário.
+- **Services:** (ex: `authService.js`, `reportService.js`) Onde reside toda a lógica de negócio, como validações complexas, criptografia de senhas e fluxos de criação de reportes.
+- **Repositories:** (ex: `authRepository.js`, `reportRepository.js`) Camada isolada que contém exclusivamente as consultas SQL, centralizando o acesso ao banco de dados e evitando repetições de código 
 
 == Integração com o Banco de dados
 
@@ -123,7 +126,7 @@ Adicionou-se suporte nativo ao envio de imagens no frontend (via câmera ou gale
 
 == O que Evoluiu
 
-Houve significativa evolução na arquitetura de banco de dados, separando os dados espaciais dos dados descritivos em tabelas distintas, e na segurança, abandonando o armazenamento em texto de base64 no banco em favor de tipos de dados binários mais otimizados para mídias. O backend evoluiu implementando transações seguras.
+Houve uma evolução drástica na maturidade do código. Além da reestruturação do banco de dados, o Back-End evoluiu de uma estrutura de script simples para uma arquitetura profissional baseada em camadas. A aplicação dos princípios **SOLID** permitiu que o código se tornasse autoexplicativo e fácil de testar, enquanto o padrão **DRY** reduziu drasticamente a redundância de código SQL e lógica de validação, centralizando comportamentos comuns em serviços reutilizáveis.
 
 == Quais desafios técnicos surgiram 
 
