@@ -1,6 +1,19 @@
 const API_URL = 'http://localhost:3000/api';
 
 export const api = {
+    async getUserAddress(id) {
+        const response = await fetch(`${API_URL}/usuarios/${id}/endereco`);
+        if (!response.ok) throw new Error('Erro ao buscar endereço');
+        return response.json();
+    },
+
+    async geocode(address) {
+        const config = await this.getMapConfig();
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${config.token}&country=br`);
+        if (!response.ok) throw new Error('Erro ao geocodificar endereço');
+        return response.json();
+    },
+
     async login(email, senha) {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
