@@ -1,0 +1,35 @@
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #0d1117;
+    border-top: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #484f58;
+    transition: color 0.2s;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav-tab:active { opacity: 0.7; }
+.bottom-nav-tab.active { color: #33d17a; }
+
+.tab-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+.tab-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.2px; }

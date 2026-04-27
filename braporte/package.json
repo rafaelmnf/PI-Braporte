@@ -1,0 +1,15 @@
+{
+  "name": "braporte",
+  "version": "1.0.0",
+  "description": "O projeto foi migrado para uma arquitetura moderna dividida em 3 camadas:",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,0 +1,26 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.perfil-page,
+.dashboard-page,
+.comunidade-page {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
