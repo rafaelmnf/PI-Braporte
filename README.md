@@ -106,7 +106,6 @@ O projeto usa dois arquivos `.env` separados:
 | `backend/.env` | DATABASE_URL, JWT_SECRET, EMAIL_HOST, etc. |
 | `frontend/.env` | VITE_MAPBOX_TOKEN, VITE_MAPBOX_STYLE, VITE_GOOGLE_PLACES_KEY |
 
-Consulte os respectivos `.env.example` para saber quais variáveis preencher.
 
 ## Funcionalidades
 
