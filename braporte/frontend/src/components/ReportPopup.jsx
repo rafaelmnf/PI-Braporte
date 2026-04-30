@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CategoryGrid from './CategoryGrid';
 import ReportForm from './ReportForm';
 
-const ReportPopup = ({ isOpen, onClose, onSubmit }) => {
+const ReportPopup = ({ isOpen, onClose, onSubmit, viewState }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
 
     useEffect(() => {
@@ -49,6 +49,7 @@ const ReportPopup = ({ isOpen, onClose, onSubmit }) => {
                                 await onSubmit(data);
                                 setTimeout(() => onClose(), 1200);
                             }}
+                            viewState={viewState}
                         />
                     )}
                 </div>

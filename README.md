@@ -1,51 +1,120 @@
-# Braporte
+# Braporte — Mapa de Segurança Urbana Colaborativo
+
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express
+- **Banco de Dados:** PostgreSQL (Supabase)
+- **Mapa:** Mapbox GL JS (react-map-gl)
+- **Busca de endereços:** Google Places Autocomplete
 
 ## Estrutura do Projeto
 
 ```
 braporte/
-├── server.js              # Servidor Node.js (http nativo)
-├── package.json
-├── routes/
-│   └── api.js             # Rotas da API (esqueleto)
-├── views/
-│   ├── login.html         # Tela de login
-│   └── mapa.html          # Tela do mapa + popup de reporte
-└── public/
-    ├── css/
-    │   ├── login.css      # Estilos do login
-    │   └── mapa.css       # Estilos do mapa
-    ├── js/
-    │   ├── login.js       # Lógica do login (validação, máscara CPF)
-    │   └── mapa.js        # Lógica do mapa (popup, filtros, categorias)
-    └── assets/            # Imagens e ícones (vazio por enquanto)
+├── backend/
+│   ├── database/
+│   │   └── schema.sql
+│   ├── scripts/
+│   │   ├── generateHash.js
+│   │   └── seed.js
+│   ├── src/
+│   │   ├── config/         # Conexão com Supabase (db.js, jwt.js)
+│   │   ├── controllers/    # authController, reportController
+│   │   ├── routes/
+│   │   │   └── api.js
+│   │   ├── app.js
+│   │   └── server.js
+│   ├── .env                # Credenciais do backend (NÃO sobe pro git)
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── effects/        # CountUp, SplitText, BorderGlow
+│   │   │   ├── map/
+│   │   │   │   └── MapViewer.jsx
+│   │   │   ├── report/
+│   │   │   │   └── ReportDetailsSheet.jsx
+│   │   │   ├── BottomNav.jsx
+│   │   │   ├── CategoryGrid.jsx
+│   │   │   ├── FilterChips.jsx
+│   │   │   ├── NotificationsPopup.jsx
+│   │   │   ├── ReportForm.jsx
+│   │   │   ├── ReportPopup.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   └── Topbar.jsx
+│   │   ├── pages/
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── CadastroPage.jsx
+│   │   │   ├── EsqueciSenhaPage.jsx
+│   │   │   ├── MapaPage.jsx
+│   │   │   ├── DashboardPage.jsx
+│   │   │   ├── ComunidadePage.jsx
+│   │   │   └── PerfilPage.jsx
+│   │   ├── services/
+│   │   │   └── api.js
+│   │   ├── styles/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── .env                # Chaves do Mapbox e Google (NÃO sobe pro git)
+│   ├── .env.example
+│   ├── index.html
+│   └── package.json
+│
+└── README.md
 ```
 
 ## Como Rodar
 
+### 1. Backend
+
 ```bash
-cd braporte
-node server.js
+cd braporte/backend
+npm install
 ```
 
-Acesse: **http://localhost:3000**
+Crie o arquivo `.env` na pasta `backend/` baseado no `.env.example` e preencha com as credenciais do Supabase.
 
-> Não precisa de `npm install` — o servidor usa apenas módulos nativos do Node.js.
+```bash
+node src/server.js
+```
 
-## Rotas
+O backend roda na porta **3000**.
 
-| Método | Rota             | Descrição                 |
-|--------|------------------|---------------------------|
-| GET    | `/`              | Redireciona para login    |
-| GET    | `/login`         | Tela de login             |
-| GET    | `/mapa`          | Tela do mapa              |
-| POST   | `/api/login`     | Endpoint de autenticação  |
-| POST   | `/api/reportes`  | Criar novo reporte        |
-| GET    | `/api/reportes`  | Listar reportes           |
+### 2. Frontend
 
-## Próximos Passos
+```bash
+cd braporte/frontend
+npm install
+```
 
-1. **Google Maps API** — Substituir o placeholder pelo mapa real
-2. **Banco de dados** — Conectar MySQL/PostgreSQL para persistir dados
-3. **Autenticação real** — JWT + bcrypt para hash de senha
-4. **Upload de imagens** — Multer para fotos dos reportes
+Crie o arquivo `.env` na pasta `frontend/` baseado no `.env.example` e preencha com as chaves do Mapbox e Google Places.
+
+```bash
+npm run dev
+```
+
+Acesse **http://localhost:5173** no navegador.
+
+### 3. Variáveis de ambiente
+
+O projeto usa dois arquivos `.env` separados:
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `backend/.env` | DATABASE_URL, JWT_SECRET, EMAIL_HOST, etc. |
+| `frontend/.env` | VITE_MAPBOX_TOKEN, VITE_MAPBOX_STYLE, VITE_GOOGLE_PLACES_KEY |
+
+
+## Funcionalidades
+
+- Login, cadastro e recuperação de senha com verificação por email
+- Mapa interativo com marcadores por categoria
+- Criação de reportes com endereço via Google Places
+- Detalhes do reporte com opção de denúncia e atualização de status
+- Dashboard com listagem, filtros e exclusão de reportes
+- Ações comunitárias com participação controlada
+- Perfil com gamificação (XP, distintivos, progresso)
+- Navegação inferior e menu lateral
+- Tema escuro em todas as telas

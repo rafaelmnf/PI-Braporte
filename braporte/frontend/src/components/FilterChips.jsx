@@ -9,7 +9,7 @@ const FILTERS = [
     { id: 'seguranca', label: '🔒 Segurança' },
     { id: 'meio-ambiente', label: '🌳 Meio Ambiente' },
     { id: 'transito', label: '🚗 Trânsito' },
-    { id: 'outros', label: '📌 Outros' }
+    { id: 'outros', label: '📌 Outros' },
 ];
 
 // Arraste horizontal com mouse ou toque

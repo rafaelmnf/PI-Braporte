@@ -2,10 +2,11 @@ import React, { useRef, useState, useEffect } from 'react';
 import Map, { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { CATEGORIAS } from '../CategoryGrid';
-
 import { api } from '../../services/api';
 
-const MapViewer = ({ reports, onReportClick, viewState, onMove }) => {
+const MAPBOX_STYLE = import.meta.env.VITE_MAPBOX_STYLE;
+
+const MapViewer = ({ reports, onReportClick, viewState, onMove, userLocation, locateTrigger }) => {
     const mapRef = useRef();
     const [mapboxToken, setMapboxToken] = useState('');
 
@@ -15,6 +16,17 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove }) => {
             .catch(err => console.error("Erro ao carregar token do mapbox: ", err));
     }, []);
 
+    useEffect(() => {
+        if (!locateTrigger || !userLocation || !mapRef.current) return;
+
+        mapRef.current.flyTo({
+            center: [userLocation.lng, userLocation.lat],
+            zoom: 17,
+            duration: 800,
+            essential: true
+        });
+    }, [locateTrigger]);
+
     if (!mapboxToken) return <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Carregando Mapa...</div>;
 
     return (
@@ -22,13 +34,31 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove }) => {
             ref={mapRef}
             {...viewState}
             onMove={evt => onMove(evt.viewState)}
-            mapStyle="mapbox://styles/mapbox/dark-v11"
+            mapStyle={MAPBOX_STYLE}
             mapboxAccessToken={mapboxToken}
             style={{ width: '100%', height: '100%' }}
         >
-            {/* Renderizando os reportes mockados */}
+            {/* marcador do usuario */}
+            {userLocation && (
+                <Marker
+                    longitude={userLocation.lng}
+                    latitude={userLocation.lat}
+                    anchor="center"
+                >
+                    <div style={{
+                        width: '18px',
+                        height: '18px',
+                        background: '#4285f4',
+                        border: '3px solid #fff',
+                        borderRadius: '50%',
+                        boxShadow: '0 0 0 6px rgba(66,133,244,0.25), 0 2px 6px rgba(0,0,0,0.3)',
+                    }} />
+                </Marker>
+            )}
+
+            {/* marcadores dos reportes */}
             {reports.map((report) => {
-                const categoryObj = CATEGORIAS[report.categoria] || CATEGORIAS['outros'];
+                const cat = CATEGORIAS[report.categoria] || CATEGORIAS['outros'];
 
                 return (
                     <Marker
@@ -41,22 +71,22 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove }) => {
                             onReportClick(report);
                         }}
                     >
-                        {/* Marcador Estilizado (Não usa o popup padrão nativo) */}
                         <div style={{
                             fontSize: '1.5rem',
                             cursor: 'pointer',
-                            filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))',
-                            transform: 'translateY(10px)',
                             background: '#fff',
                             borderRadius: '50%',
-                            width: '32px',
-                            height: '32px',
+                            width: '36px',
+                            height: '36px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: `2px solid ${categoryObj.bg}`
+                            border: `3px solid ${cat.color}`,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                            willChange: 'transform',
+                            backfaceVisibility: 'hidden'
                         }}>
-                            {categoryObj.emoji}
+                            {cat.emoji}
                         </div>
                     </Marker>
                 );

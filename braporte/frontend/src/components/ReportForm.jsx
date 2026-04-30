@@ -1,24 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CATEGORIAS } from './CategoryGrid';
 
-const ReportForm = ({ categoryId, onChangeCategory, onSubmit }) => {
+const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
     const [title, setTitle] = useState('');
+    const [address, setAddress] = useState('');
     const [desc, setDesc] = useState('');
     const [titleError, setTitleError] = useState(false);
-    const [status, setStatus] = useState('idle'); // idle, submitting, success
+    const [status, setStatus] = useState('idle');
+
+    const selectedCoordsRef = useRef(null);
+    const addressInputRef = useRef(null);
+    const autocompleteRef = useRef(null);
 
     const cat = CATEGORIAS[categoryId];
 
-    const handleSubmit = async () => {
-        if (!title.trim()) {
-            setTitleError(true);
-            return;
+    const getBoundsFromView = () => {
+        if (!window.google?.maps) return null;
+        const lat = viewState?.latitude || -22.8342;
+        const lng = viewState?.longitude || -47.0485;
+        return new window.google.maps.LatLngBounds(
+            { lat: lat - 0.03, lng: lng - 0.03 },
+            { lat: lat + 0.03, lng: lng + 0.03 }
+        );
+    };
+
+    useEffect(() => {
+        const init = () => {
+            if (!window.google?.maps?.places || !addressInputRef.current) return;
+            if (autocompleteRef.current) return;
+
+            const ac = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+                types: ['geocode', 'establishment'],
+                componentRestrictions: { country: 'br' },
+                fields: ['formatted_address', 'geometry', 'name'],
+                bounds: getBoundsFromView(),
+                strictBounds: false
+            });
+
+            ac.addListener('place_changed', () => {
+                const place = ac.getPlace();
+                if (!place.geometry) return;
+                const fullAddr = place.formatted_address || place.name || '';
+                setAddress(fullAddr);
+                selectedCoordsRef.current = {
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                };
+            });
+
+            autocompleteRef.current = ac;
+        };
+
+        if (window.google?.maps?.places) {
+            init();
+        } else {
+            const interval = setInterval(() => {
+                if (window.google?.maps?.places) { clearInterval(interval); init(); }
+            }, 300);
+            return () => clearInterval(interval);
         }
+    }, []);
+
+    const handleAddressChange = (e) => {
+        setAddress(e.target.value);
+        selectedCoordsRef.current = null;
+    };
+
+    useEffect(() => {
+        return () => {
+            if (autocompleteRef.current) {
+                window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
+                autocompleteRef.current = null;
+            }
+        };
+    }, []);
+
+    const handleSubmit = async () => {
+        if (!title.trim()) { setTitleError(true); return; }
         setTitleError(false);
         setStatus('submitting');
         
         try {
-            await onSubmit({ categoria: categoryId, titulo: title, descricao: desc });
+            await onSubmit({ 
+                categoria: categoryId, 
+                titulo: title, 
+                descricao: desc,
+                endereco: address,
+                lat: selectedCoordsRef.current?.lat || null,
+                lng: selectedCoordsRef.current?.lng || null
+            });
             setStatus('success');
         } catch (error) {
             console.error(error);
@@ -48,6 +118,19 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit }) => {
                         setTitle(e.target.value);
                         if (e.target.value.trim()) setTitleError(false);
                     }}
+                />
+            </div>
+
+            <div className="form-field">
+                <label htmlFor="reportAddress">Endereço</label>
+                <input
+                    type="text"
+                    id="reportAddress"
+                    ref={addressInputRef}
+                    placeholder="Digite o endereço..."
+                    value={address}
+                    onChange={handleAddressChange}
+                    autoComplete="off"
                 />
             </div>
 
