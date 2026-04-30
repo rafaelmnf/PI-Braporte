@@ -1,16 +1,23 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Map, { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { CATEGORIAS } from '../CategoryGrid';
+import { api } from '../../services/api';
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 const MAPBOX_STYLE = import.meta.env.VITE_MAPBOX_STYLE;
 
 const MapViewer = ({ reports, onReportClick, viewState, onMove, userLocation, locateTrigger }) => {
     const mapRef = useRef();
+    const [mapboxToken, setMapboxToken] = useState('');
 
     useEffect(() => {
-    if (!locateTrigger || !userLocation || !mapRef.current) return;
+        api.getMapConfig()
+            .then(data => setMapboxToken(data.token))
+            .catch(err => console.error("Erro ao carregar token do mapbox: ", err));
+    }, []);
+
+    useEffect(() => {
+        if (!locateTrigger || !userLocation || !mapRef.current) return;
 
         mapRef.current.flyTo({
             center: [userLocation.lng, userLocation.lat],
@@ -20,13 +27,15 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove, userLocation, lo
         });
     }, [locateTrigger]);
 
+    if (!mapboxToken) return <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Carregando Mapa...</div>;
+
     return (
         <Map
             ref={mapRef}
             {...viewState}
             onMove={evt => onMove(evt.viewState)}
             mapStyle={MAPBOX_STYLE}
-            mapboxAccessToken={MAPBOX_TOKEN}
+            mapboxAccessToken={mapboxToken}
             style={{ width: '100%', height: '100%' }}
         >
             {/* marcador do usuario */}
