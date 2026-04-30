@@ -150,7 +150,10 @@ const MapaPage = () => {
             return;
         }
 
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation) {
+            alert('Geolocalização não é suportada neste navegador.');
+            return;
+        }
 
         navigator.geolocation.getCurrentPosition(
             (pos) => {
@@ -159,8 +162,11 @@ const MapaPage = () => {
                     lng: pos.coords.longitude
                 });
             },
-            (err) => console.warn('GPS indisponível:', err.message),
-            { enableHighAccuracy: true, timeout: 10000 }
+            (err) => {
+                console.warn('GPS indisponível:', err.message);
+                alert('Não foi possível obter sua localização. Verifique se as configurações de localização estão ativadas no navegador e permita o acesso.');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     }, [userLocation]);
 
