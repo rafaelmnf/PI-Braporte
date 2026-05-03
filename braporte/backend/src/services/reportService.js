@@ -21,7 +21,7 @@ class ReportService {
             ...novoReporte,
             latitude: reportData.latitude,
             longitude: reportData.longitude,
-            imagem: imageService.encodeBase64(novoReporte.imagem, novoReporte.tipo_imagem)
+            imagem: imageService.encodeBase64(reportData.imagem, reportData.tipo_imagem)
         };
     }
 

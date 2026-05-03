@@ -7,12 +7,19 @@ class ReportRepository {
         return await sql.begin(async sql => {
             const [novoReporte] = await sql`
                 INSERT INTO reportes (
-                    id_usuario, motivo, descricao, categoria, endereco, imagem, tipo_imagem
+                    id_usuario, motivo, descricao, categoria, endereco
                 ) VALUES (
-                    ${id_usuario}, ${motivo}, ${descricao}, ${categoria}, ${endereco}, ${imagem || null}, ${tipo_imagem || null}
+                    ${id_usuario}, ${motivo}, ${descricao}, ${categoria}, ${endereco}
                 )
                 RETURNING *
             `;
+
+            if (imagem) {
+                await sql`
+                    INSERT INTO imagens (fk_reporte, tipo_imagem, bin_imagem)
+                    VALUES (${novoReporte.id_reporte}, ${tipo_imagem}, ${imagem})
+                `;
+            }
 
             await sql`
                 INSERT INTO geolocalizacao (id_reporte, latitude, longitude)
@@ -30,9 +37,16 @@ class ReportRepository {
 
     async getReports() {
         return await sql`
-            SELECT r.*, g.latitude, g.longitude 
+            SELECT r.*, g.latitude, g.longitude, i.bin_imagem AS imagem, i.tipo_imagem
             FROM reportes r
             LEFT JOIN geolocalizacao g ON r.id_reporte = g.id_reporte
+            LEFT JOIN LATERAL (
+                SELECT bin_imagem, tipo_imagem
+                FROM imagens
+                WHERE fk_reporte = r.id_reporte
+                ORDER BY id_imagem DESC
+                LIMIT 1
+            ) i ON true
             WHERE r.status != 'denunciado' 
             ORDER BY r.data_hora DESC
         `;
@@ -84,20 +98,16 @@ class ReportRepository {
     }
 
     async updateStatusReporte(reporteId, novoStatus, imagem, tipo_imagem) {
+        await sql`
+            UPDATE reportes
+            SET status = ${novoStatus}
+            WHERE id_reporte = ${reporteId}
+        `;
+
         if (imagem) {
             await sql`
-                UPDATE reportes
-                SET 
-                    status = ${novoStatus},
-                    imagem = ${imagem},
-                    tipo_imagem = ${tipo_imagem}
-                WHERE id_reporte = ${reporteId}
-            `;
-        } else {
-            await sql`
-                UPDATE reportes
-                SET status = ${novoStatus}
-                WHERE id_reporte = ${reporteId}
+                INSERT INTO imagens (fk_reporte, tipo_imagem, bin_imagem)
+                VALUES (${reporteId}, ${tipo_imagem}, ${imagem})
             `;
         }
     }
