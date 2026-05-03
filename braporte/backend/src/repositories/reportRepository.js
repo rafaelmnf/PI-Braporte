@@ -2,14 +2,14 @@ const sql = require('../config/db');
 
 class ReportRepository {
     async createReport(reportData) {
-        const { id_usuario, motivo, descricao, categoria, latitude, longitude, endereco } = reportData;
+        const { id_usuario, motivo, descricao, categoria, latitude, longitude, endereco, imagem, tipo_imagem } = reportData;
         
         return await sql.begin(async sql => {
             const [novoReporte] = await sql`
                 INSERT INTO reportes (
-                    id_usuario, motivo, descricao, categoria, endereco
+                    id_usuario, motivo, descricao, categoria, endereco, imagem, tipo_imagem
                 ) VALUES (
-                    ${id_usuario}, ${motivo}, ${descricao}, ${categoria}, ${endereco}
+                    ${id_usuario}, ${motivo}, ${descricao}, ${categoria}, ${endereco}, ${imagem || null}, ${tipo_imagem || null}
                 )
                 RETURNING *
             `;
@@ -83,12 +83,23 @@ class ReportRepository {
         `;
     }
 
-    async updateStatusReporte(reporteId, novoStatus) {
-        await sql`
-            UPDATE reportes
-            SET status = ${novoStatus}
-            WHERE id_reporte = ${reporteId}
-        `;
+    async updateStatusReporte(reporteId, novoStatus, imagem, tipo_imagem) {
+        if (imagem) {
+            await sql`
+                UPDATE reportes
+                SET 
+                    status = ${novoStatus},
+                    imagem = ${imagem},
+                    tipo_imagem = ${tipo_imagem}
+                WHERE id_reporte = ${reporteId}
+            `;
+        } else {
+            await sql`
+                UPDATE reportes
+                SET status = ${novoStatus}
+                WHERE id_reporte = ${reporteId}
+            `;
+        }
     }
 
     async getAtualizacoes(id_reporte) {

@@ -49,7 +49,7 @@ exports.denunciarReport = async (req, res) => {
 
 exports.atualizarReporteStatus = async (req, res) => {
     const { id } = req.params;
-    const { id_usuario, tipo_contribuicao } = req.body;
+    const { id_usuario, tipo_contribuicao, imagem } = req.body;
 
     const reporteId = parseInt(id, 10);
     const usuarioId = parseInt(id_usuario, 10);
@@ -59,7 +59,7 @@ exports.atualizarReporteStatus = async (req, res) => {
     }
 
     try {
-        const { novoStatus, contagem } = await reportService.atualizarStatus(reporteId, usuarioId, tipo_contribuicao);
+        const { novoStatus, contagem } = await reportService.atualizarStatus(reporteId, usuarioId, tipo_contribuicao, imagem);
 
         res.status(200).json({ 
             sucesso: true, 
