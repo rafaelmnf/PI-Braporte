@@ -90,9 +90,9 @@ const MapaPage = () => {
             const userStr = localStorage.getItem('user');
             const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
 
-            // usa coords do google se tiver
-            const lat = data.lat || viewState.latitude;
-            const lng = data.lng || viewState.longitude;
+            // usa coords do google se tiver, senão usa a localização do usuário
+            const lat = data.lat || (userLocation ? userLocation.lat : null);
+            const lng = data.lng || (userLocation ? userLocation.lng : null);
 
             const payload = {
                 id_usuario: idUsuario,
@@ -217,6 +217,7 @@ const MapaPage = () => {
                 onClose={() => setIsPopupOpen(false)}
                 onSubmit={handleReportSubmit}
                 viewState={viewState}
+                userLocation={userLocation}
             />
 
             <ReportDetailsSheet

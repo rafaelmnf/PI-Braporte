@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CATEGORIAS } from './CategoryGrid';
 
-const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
+import { api } from '../services/api';
+
+const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLocation }) => {
     const [title, setTitle] = useState('');
     const [address, setAddress] = useState('');
     const [desc, setDesc] = useState('');
@@ -25,6 +27,20 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
             { lat: lat + 0.03, lng: lng + 0.03 }
         );
     };
+
+    useEffect(() => {
+        // Reverse geocode user location on mount if available
+        if (userLocation && !address) {
+            api.reverseGeocode(userLocation.lat, userLocation.lng)
+                .then(data => {
+                    if (data && data.features && data.features.length > 0) {
+                        setAddress(data.features[0].place_name);
+                        selectedCoordsRef.current = userLocation;
+                    }
+                })
+                .catch(err => console.error("Erro ao obter endereço reverso:", err));
+        }
+    }, [userLocation]);
 
     useEffect(() => {
         const init = () => {

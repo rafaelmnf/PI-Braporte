@@ -14,6 +14,13 @@ export const api = {
         return response.json();
     },
 
+    async reverseGeocode(lat, lng) {
+        const config = await this.getMapConfig();
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${config.token}&types=address,poi`);
+        if (!response.ok) throw new Error('Erro ao buscar endereço reverso');
+        return response.json();
+    },
+
     async login(email, senha) {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
