@@ -13,6 +13,8 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
     const [atualizacoes, setAtualizacoes] = useState([]);
     const [showOptions, setShowOptions] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     
     // Suporte para fechar no ESC
     useEffect(() => {
@@ -37,6 +39,18 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
         fetchAtualizacoes();
     }, [report]);
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result);
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleAtualizarStatus = async (chave) => {
         setIsUpdating(true);
         try {
@@ -46,8 +60,10 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
 
             console.log("Atualizando status do reporte...");
 
-            const r = await api.atualizarStatus(report.id_reporte, idUsuario, chave);
+            const r = await api.atualizarStatus(report.id_reporte, idUsuario, chave, selectedImage);
             
+            setSelectedImage(null);
+            setImagePreview(null);
             setShowOptions(false);
             fetchAtualizacoes();
             alert("Status atualizado com sucesso!");
@@ -183,6 +199,42 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
                                     <div style={{ fontSize: '0.8rem', color: '#aaa', padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #333', marginBottom: '4px' }}>
                                         O que você viu agora?
                                     </div>
+                                    
+                                    <div 
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '10px', 
+                                            padding: '8px', 
+                                            background: 'rgba(255,255,255,0.03)', 
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            border: '1px dashed #444'
+                                        }}
+                                        onClick={() => document.getElementById('updateFileInput').click()}
+                                    >
+                                        <div style={{ width: '40px', height: '40px', background: '#333', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                            {imagePreview ? (
+                                                <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                                    <circle cx="12" cy="13" r="4"></circle>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '0.85rem', color: '#eee' }}>
+                                            {imagePreview ? 'Foto selecionada' : 'Adicionar foto à atualização'}
+                                        </span>
+                                        <input 
+                                            type="file" 
+                                            id="updateFileInput" 
+                                            accept="image/*" 
+                                            style={{ display: 'none' }} 
+                                            onChange={handleFileChange} 
+                                        />
+                                    </div>
+
                                     {Object.entries(STATUS_LABELS).map(([key, label]) => (
                                         <button 
                                             key={key} 

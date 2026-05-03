@@ -7,6 +7,8 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
     const [desc, setDesc] = useState('');
     const [titleError, setTitleError] = useState(false);
     const [status, setStatus] = useState('idle');
+    const [image, setImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
     const selectedCoordsRef = useRef(null);
     const addressInputRef = useRef(null);
@@ -66,6 +68,18 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
         selectedCoordsRef.current = null;
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImage(reader.result); // Base64 string
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     useEffect(() => {
         return () => {
             if (autocompleteRef.current) {
@@ -87,7 +101,8 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
                 descricao: desc,
                 endereco: address,
                 lat: selectedCoordsRef.current?.lat || null,
-                lng: selectedCoordsRef.current?.lng || null
+                lng: selectedCoordsRef.current?.lng || null,
+                imagem: image
             });
             setStatus('success');
         } catch (error) {
@@ -147,14 +162,32 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState }) => {
 
             <div className="form-field">
                 <label>Foto (opcional)</label>
-                <div className="photo-upload" id="photoUpload">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <span>Adicionar foto</span>
+                <div 
+                    className="photo-upload" 
+                    id="photoUpload" 
+                    onClick={() => document.getElementById('fileInput').click()}
+                    style={imagePreview ? { padding: '0', overflow: 'hidden' } : {}}
+                >
+                    {imagePreview ? (
+                        <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <span>Adicionar foto</span>
+                        </>
+                    )}
                 </div>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                    onChange={handleFileChange} 
+                />
             </div>
 
             <button

@@ -109,11 +109,11 @@ export const api = {
         return response.json();
     },
 
-    async atualizarStatus(id, id_usuario, tipo_contribuicao) {
+    async atualizarStatus(id, id_usuario, tipo_contribuicao, imagem = null) {
         const response = await fetch(`${API_URL}/reportes/${id}/atualizar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_usuario, tipo_contribuicao })
+            body: JSON.stringify({ id_usuario, tipo_contribuicao, imagem })
         });
         if (!response.ok) throw new Error('Erro ao atualizar status');
         return response.json();
