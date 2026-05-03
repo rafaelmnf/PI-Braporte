@@ -101,7 +101,8 @@ const MapaPage = () => {
                 categoria: data.categoria,
                 latitude: lat,
                 longitude: lng,
-                endereco: data.endereco || ''
+                endereco: data.endereco || '',
+                imagem: data.imagem
             };
 
             const response = await api.createReport(payload);
