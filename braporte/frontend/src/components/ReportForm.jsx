@@ -87,6 +87,20 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLoc
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validação de tipo
+            if (!file.type.startsWith('image/')) {
+                alert('Tipo de arquivo não suportado! Por favor, selecione uma imagem (PNG, JPEG, etc).');
+                e.target.value = '';
+                return;
+            }
+
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+            if (file.size > MAX_SIZE) {
+                alert('A imagem é muito grande! O tamanho máximo permitido é 10MB.');
+                e.target.value = ''; // Limpa o input
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImage(reader.result); // Base64 string

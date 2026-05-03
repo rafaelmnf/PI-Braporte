@@ -116,6 +116,12 @@ export const api = {
         return response.json();
     },
 
+    async getImagens(id) {
+        const response = await fetch(`${API_URL}/reportes/${id}/imagens`);
+        if (!response.ok) throw new Error('Erro ao buscar imagens');
+        return response.json();
+    },
+
     async atualizarStatus(id, id_usuario, tipo_contribuicao, imagem = null) {
         const response = await fetch(`${API_URL}/reportes/${id}/atualizar`, {
             method: 'POST',

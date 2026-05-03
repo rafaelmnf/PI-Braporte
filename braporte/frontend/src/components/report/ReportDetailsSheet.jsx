@@ -15,6 +15,8 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
     const [isUpdating, setIsUpdating] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [imagensArray, setImagensArray] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     
     // Suporte para fechar no ESC
     useEffect(() => {
@@ -35,13 +37,46 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
         }
     };
 
+    const fetchImagens = async () => {
+        if (!report) return;
+        try {
+            const data = await api.getImagens(report.id_reporte);
+            if (data.imagens && data.imagens.length > 0) {
+                setImagensArray(data.imagens);
+                setCurrentImageIndex(0);
+            } else if (report.imagem) {
+                setImagensArray([report.imagem]);
+                setCurrentImageIndex(0);
+            } else {
+                setImagensArray([]);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
         fetchAtualizacoes();
+        fetchImagens();
     }, [report]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validação de tipo
+            if (!file.type.startsWith('image/')) {
+                alert('Tipo de arquivo não suportado! Por favor, selecione uma imagem (PNG, JPEG, etc).');
+                e.target.value = '';
+                return;
+            }
+
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+            if (file.size > MAX_SIZE) {
+                alert('A imagem é muito grande! O tamanho máximo permitido é 10MB.');
+                e.target.value = ''; // Limpa o input
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setSelectedImage(reader.result);
@@ -66,6 +101,7 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
             setImagePreview(null);
             setShowOptions(false);
             fetchAtualizacoes();
+            fetchImagens();
             alert("Status atualizado com sucesso!");
             
             // Opcional: Se quiser atualizar o status pai no mapa automaticamente
@@ -161,9 +197,32 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
                         </div>
                     )}
 
-                    {report.imagem && (
-                        <div className="details-photo" style={{ marginTop: '20px' }}>
-                            <img src={report.imagem} alt="Foto do reporte" style={{ width: '100%', borderRadius: '8px' }} />
+                    {imagensArray.length > 0 && (
+                        <div className="details-photo" style={{ marginTop: '20px', position: 'relative' }}>
+                            <img src={imagensArray[currentImageIndex]} alt="Foto do reporte" style={{ width: '100%', borderRadius: '8px', maxHeight: '400px', objectFit: 'cover' }} />
+                            {imagensArray.length > 1 && (
+                                <>
+                                    <button 
+                                        className="carousel-btn"
+                                        style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        onClick={() => setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : imagensArray.length - 1))}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                                    </button>
+                                    <button 
+                                        className="carousel-btn"
+                                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        onClick={() => setCurrentImageIndex((prev) => (prev < imagensArray.length - 1 ? prev + 1 : 0))}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                                    </button>
+                                    <div style={{ position: 'absolute', bottom: '15px', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                        {imagensArray.map((_, idx) => (
+                                            <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '50%', background: idx === currentImageIndex ? 'white' : 'rgba(255,255,255,0.4)', transition: 'background 0.3s' }}></div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
