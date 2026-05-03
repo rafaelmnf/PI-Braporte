@@ -112,6 +112,15 @@ class ReportRepository {
         }
     }
 
+    async getImagens(id_reporte) {
+        return await sql`
+            SELECT id_imagem, tipo_imagem, bin_imagem
+            FROM imagens
+            WHERE fk_reporte = ${id_reporte}
+            ORDER BY id_imagem ASC
+        `;
+    }
+
     async getAtualizacoes(id_reporte) {
         return await sql`
             SELECT tipo_contribuicao, COUNT(*) as count, MAX(data_atualizacao) as last_update

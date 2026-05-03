@@ -23,5 +23,6 @@ router.patch('/reportes/:id/denunciar', reportController.denunciarReport);
 
 router.post('/reportes/:id/atualizar', reportController.atualizarReporteStatus);
 router.get('/reportes/:id/atualizacoes', reportController.getAtualizacoesReporte);
+router.get('/reportes/:id/imagens', reportController.getImagensReporte);
 
 module.exports = router;

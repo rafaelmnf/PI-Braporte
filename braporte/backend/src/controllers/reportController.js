@@ -83,3 +83,14 @@ exports.getAtualizacoesReporte = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar atualizações' });
     }
 };
+
+exports.getImagensReporte = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const imagens = await reportService.getImagens(id);
+        res.status(200).json({ imagens });
+    } catch (err) {
+        console.error('Erro ao buscar imagens:', err);
+        res.status(500).json({ error: 'Erro ao buscar imagens' });
+    }
+};

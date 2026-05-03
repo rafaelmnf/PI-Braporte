@@ -94,6 +94,11 @@ class ReportService {
     async getAtualizacoes(id_reporte) {
         return await reportRepository.getAtualizacoes(id_reporte);
     }
+
+    async getImagens(id_reporte) {
+        const imagens = await reportRepository.getImagens(id_reporte);
+        return imagens.map(img => imageService.encodeBase64(img.bin_imagem, img.tipo_imagem));
+    }
 }
 
 module.exports = new ReportService();
