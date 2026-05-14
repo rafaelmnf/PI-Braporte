@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import { useDragScroll } from '../hooks/useDragScroll';
 
 const FILTERS = [
     { id: 'todos', label: 'Todos' },
@@ -12,41 +13,18 @@ const FILTERS = [
     { id: 'outros', label: '📌 Outros' },
 ];
 
-// Arraste horizontal com mouse ou toque
 const FilterChips = ({ activeFilter, onFilterChange }) => {
-    const ref = useRef(null);
-    const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
-
-    const onMouseDown = (e) => {
-        drag.current = { active: true, startX: e.pageX, scrollLeft: ref.current.scrollLeft, moved: false };
-        ref.current.style.cursor = 'grabbing';
-    };
-
-    const onMouseMove = (e) => {
-        if (!drag.current.active) return;
-        const delta = e.pageX - drag.current.startX;
-        if (Math.abs(delta) > 4) drag.current.moved = true;
-        ref.current.scrollLeft = drag.current.scrollLeft - delta;
-    };
-
-    const onMouseUp = () => {
-        drag.current.active = false;
-        ref.current.style.cursor = '';
-    };
+    const { events, hasMoved } = useDragScroll();
 
     const handleChipClick = (filterId) => {
-        if (!drag.current.moved) onFilterChange(filterId);
+        if (!hasMoved()) onFilterChange(filterId);
     };
 
     return (
         <div
             className="filter-chips"
             id="filterChips"
-            ref={ref}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseUp}
+            {...events}
         >
             {FILTERS.map(filter => (
                 <button
