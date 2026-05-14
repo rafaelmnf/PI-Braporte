@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import Map, { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { CATEGORIAS } from '../CategoryGrid';
@@ -27,7 +27,47 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove, userLocation, lo
         });
     }, [locateTrigger]);
 
-    if (!mapboxToken) return <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Carregando Mapa...</div>;
+    const processedReports = useMemo(() => {
+        if (!reports) return [];
+        const locMap = {};
+        const result = [];
+
+        reports.forEach(r => {
+            const key = `${r.latitude},${r.longitude}`;
+            if (!locMap[key]) {
+                locMap[key] = [];
+            }
+            locMap[key].push(r);
+        });
+
+        Object.values(locMap).forEach(group => {
+            if (group.length === 1) {
+                result.push({
+                    ...group[0],
+                    displayLatitude: Number(group[0].latitude),
+                    displayLongitude: Number(group[0].longitude)
+                });
+            } else {
+                // Se tiver mais de um na mesma localização exata, espalha em um círculo
+                // Aumentar levemente o raio se tiver muitos marcadores
+                const baseRadius = 0.00003;
+                const radius = group.length > 5 ? baseRadius * 1.5 : baseRadius;
+
+                group.forEach((r, idx) => {
+                    const angle = (idx / group.length) * 2 * Math.PI;
+                    result.push({
+                        ...r,
+                        displayLatitude: Number(r.latitude) + radius * Math.cos(angle),
+                        displayLongitude: Number(r.longitude) + radius * Math.sin(angle)
+                    });
+                });
+            }
+        });
+
+        return result;
+    }, [reports]);
+
+    if (!mapboxToken) return <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Carregando Mapa...</div>;
 
     return (
         <Map
@@ -57,14 +97,14 @@ const MapViewer = ({ reports, onReportClick, viewState, onMove, userLocation, lo
             )}
 
             {/* marcadores dos reportes */}
-            {reports.map((report) => {
+            {processedReports.map((report) => {
                 const cat = CATEGORIAS[report.categoria] || CATEGORIAS['outros'];
 
                 return (
                     <Marker
                         key={report.id_reporte}
-                        longitude={report.longitude}
-                        latitude={report.latitude}
+                        longitude={report.displayLongitude}
+                        latitude={report.displayLatitude}
                         anchor="bottom"
                         onClick={e => {
                             e.originalEvent.stopPropagation();
