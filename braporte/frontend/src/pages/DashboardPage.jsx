@@ -2,27 +2,30 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { CATEGORIAS } from '../components/CategoryGrid';
 import NotificationsPopup from '../components/NotificationsPopup';
 import { api } from '../services/api';
+import { useDragScroll } from '../hooks/useDragScroll';
 import '../styles/dashboard.css';
 
 const STATUS_MAP = {
-    'aberto':       { label: 'Aberto', className: 'badge-aberto' },
-    'em_analise':   { label: 'Em Análise', className: 'badge-analise' },
+    'aberto': { label: 'Aberto', className: 'badge-aberto' },
+    'em_analise': { label: 'Em Análise', className: 'badge-analise' },
     'em_andamento': { label: 'Em Andamento', className: 'badge-andamento' },
-    'fechado':      { label: 'Fechado', className: 'badge-fechado' },
-    'resolvido':    { label: 'Resolvido', className: 'badge-resolvido' }
+    'fechado': { label: 'Fechado', className: 'badge-fechado' },
+    'resolvido': { label: 'Resolvido', className: 'badge-resolvido' }
 };
 
 const FILTERS = [
     { id: 'todos', label: 'Todos' },
     { id: 'meus', label: 'Meus Reportes' },
+    { id: 'aberto', label: 'Abertos' },
     { id: 'em_andamento', label: 'Em Andamento' },
+    { id: 'resolvido', label: 'Resolvidos' },
 ];
 
 function formatDate(iso) {
     try {
         const d = new Date(iso);
-        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' }) 
-             + ', ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' })
+            + ', ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     } catch { return ''; }
 }
 
@@ -32,6 +35,12 @@ const DashboardPage = () => {
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notifOpen, setNotifOpen] = useState(false);
+
+    const { events: dragEvents, hasMoved } = useDragScroll();
+
+    const handleFilterClick = (filterId) => {
+        if (!hasMoved()) setActiveFilter(filterId);
+    };
 
     const userId = useMemo(() => {
         try {
@@ -53,6 +62,10 @@ const DashboardPage = () => {
             list = list.filter(r => r.id_usuario === userId);
         } else if (activeFilter === 'em_andamento') {
             list = list.filter(r => r.status === 'em_andamento');
+        } else if (activeFilter === 'resolvido') {
+            list = list.filter(r => r.status === 'resolvido');
+        } else if (activeFilter === 'aberto') {
+            list = list.filter(r => r.status === 'aberto');
         }
         return list;
     }, [reports, activeFilter, userId]);
@@ -77,20 +90,23 @@ const DashboardPage = () => {
                     <h1>Seus Reportes</h1>
                     <button className="dash-bell" aria-label="Notificações" onClick={() => setNotifOpen(true)}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 01-3.46 0" />
                         </svg>
                     </button>
                 </div>
                 <p className="dash-subtitle">Acompanhe a resolução das ocorrências no seu bairro.</p>
             </header>
 
-            <div className="dash-filters">
+            <div 
+                className="dash-filters"
+                {...dragEvents}
+            >
                 {FILTERS.map(f => (
                     <button
                         key={f.id}
                         className={`dash-filter-btn ${activeFilter === f.id ? 'active' : ''}`}
-                        onClick={() => setActiveFilter(f.id)}
+                        onClick={() => handleFilterClick(f.id)}
                     >
                         {f.label}
                     </button>
@@ -135,8 +151,8 @@ const DashboardPage = () => {
                         <div className="dash-detail-header">
                             <button onClick={() => setSelectedDetail(null)}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                             <h3>Detalhes do Reporte</h3>
@@ -157,9 +173,9 @@ const DashboardPage = () => {
                             </div>
                             <button className="dd-btn-delete" onClick={() => handleDelete(selectedDetail.id_reporte)}>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                    <path d="M10 11v6" /><path d="M14 11v6" />
                                 </svg>
                                 Excluir Reporte
                             </button>
