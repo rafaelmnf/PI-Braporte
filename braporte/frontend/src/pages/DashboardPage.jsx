@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CATEGORIAS } from '../components/CategoryGrid';
 import NotificationsPopup from '../components/NotificationsPopup';
+import MenuButton from '../components/MenuButton';
 import { api } from '../services/api';
 import { useDragScroll } from '../hooks/useDragScroll';
 import '../styles/dashboard.css';
@@ -30,6 +32,7 @@ function formatDate(iso) {
 }
 
 const DashboardPage = () => {
+    const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [activeFilter, setActiveFilter] = useState('todos');
     const [selectedDetail, setSelectedDetail] = useState(null);
@@ -57,7 +60,9 @@ const DashboardPage = () => {
     }, []);
 
     const filtered = useMemo(() => {
-        let list = [...reports].sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora));
+        let list = [...reports]
+            .filter(r => r.status !== 'excluido')
+            .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora));
         if (activeFilter === 'meus' && userId) {
             list = list.filter(r => r.id_usuario === userId);
         } else if (activeFilter === 'em_andamento') {
@@ -75,19 +80,36 @@ const DashboardPage = () => {
         try {
             const userStr = localStorage.getItem('user');
             const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
-            await api.denunciarReport(id_reporte, idUsuario);
+            await api.deletarReporte(id_reporte, idUsuario);
             setReports(prev => prev.filter(r => r.id_reporte !== id_reporte));
             setSelectedDetail(null);
         } catch (err) {
             console.error('Erro ao excluir:', err);
+            alert('Erro ao excluir o reporte.');
+        }
+    };
+
+    const handleDenunciar = async (id_reporte) => {
+        if (!confirm('Deseja denunciar este reporte?')) return;
+        try {
+            const userStr = localStorage.getItem('user');
+            const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
+            await api.denunciarReport(id_reporte, idUsuario);
+            setReports(prev => prev.filter(r => r.id_reporte !== id_reporte));
+            setSelectedDetail(null);
+            alert('Reporte denunciado.');
+        } catch (err) {
+            console.error('Erro ao denunciar:', err);
+            alert('Erro ao denunciar o reporte.');
         }
     };
 
     return (
         <div className="dashboard-page">
+            <MenuButton />
             <header className="dash-header">
                 <div className="dash-header-top">
-                    <h1>Seus Reportes</h1>
+                    <h1>Reportes</h1>
                     <button className="dash-bell" aria-label="Notificações" onClick={() => setNotifOpen(true)}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -171,14 +193,31 @@ const DashboardPage = () => {
                                 <h4>Descrição</h4>
                                 <p>{selectedDetail.descricao || 'Sem descrição.'}</p>
                             </div>
-                            <button className="dd-btn-delete" onClick={() => handleDelete(selectedDetail.id_reporte)}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                    <polyline points="3 6 5 6 21 6" />
-                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                    <path d="M10 11v6" /><path d="M14 11v6" />
-                                </svg>
-                                Excluir Reporte
-                            </button>
+                            {selectedDetail.id_usuario === userId ? (
+                                <button className="dd-btn-delete" onClick={() => handleDelete(selectedDetail.id_reporte)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                        <path d="M10 11v6" /><path d="M14 11v6" />
+                                    </svg>
+                                    Excluir Reporte
+                                </button>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        style={{ flex: 1, padding: '12px', background: '#238636', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+                                        onClick={() => navigate(`/mapa?reporte=${selectedDetail.id_reporte}`)}
+                                    >
+                                        Atualizar Status
+                                    </button>
+                                    <button
+                                        style={{ flex: 1, padding: '12px', background: 'transparent', color: '#f85149', border: '1px solid #f85149', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+                                        onClick={() => handleDenunciar(selectedDetail.id_reporte)}
+                                    >
+                                        Denunciar
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

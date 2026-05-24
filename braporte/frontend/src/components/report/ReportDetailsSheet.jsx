@@ -17,6 +17,53 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
     const [imagePreview, setImagePreview] = useState(null);
     const [imagensArray, setImagensArray] = useState([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [nota, setNota] = useState(0);
+    const [hoverNota, setHoverNota] = useState(0);
+
+    const baixarImagem = (dataUri, index) => {
+        if (!dataUri) return;
+        const match = dataUri.match(/^data:image\/([a-zA-Z]+);/);
+        const ext = match ? match[1] : 'jpg';
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = `reporte-${report.id_reporte}-${index + 1}.${ext}`;
+        link.click();
+    };
+
+    const handleAvaliar = async (valor) => {
+        try {
+            const userStr = localStorage.getItem('user');
+            const idUsuario = userStr ? JSON.parse(userStr).id_usuario : 1;
+
+            await api.avaliarReporte(report.id_reporte, idUsuario, valor);
+            setNota(valor);
+            alert("Avaliação registrada!");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao enviar avaliação.");
+        }
+    };
+
+    // id do usuario logado, para saber se o reporte é dele
+    const userIdLogado = (() => {
+        try {
+            const id = JSON.parse(localStorage.getItem('user'))?.id_usuario;
+            return id != null ? Number(id) : null;
+        } catch { return null; }
+    })();
+
+    const handleExcluirReporte = async () => {
+        if (!confirm('Tem certeza que deseja excluir este reporte?')) return;
+        try {
+            await api.deletarReporte(report.id_reporte, userIdLogado || 1);
+            alert('Reporte excluído.');
+            onClose();
+            if (onStatusUpdated) onStatusUpdated(report.id_reporte, 'excluido');
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao excluir o reporte.');
+        }
+    };
     
     // Suporte para fechar no ESC
     useEffect(() => {
@@ -41,10 +88,13 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
         if (!report) return;
         try {
             const data = await api.getImagens(report.id_reporte);
-            if (data.imagens && data.imagens.length > 0) {
-                setImagensArray(data.imagens);
+            // mantem apenas imagens validas (descarta nulos/vazios)
+            const validas = (data.imagens || []).filter(img => img && typeof img === 'string');
+
+            if (validas.length > 0) {
+                setImagensArray(validas);
                 setCurrentImageIndex(0);
-            } else if (report.imagem) {
+            } else if (report.imagem && typeof report.imagem === 'string') {
                 setImagensArray([report.imagem]);
                 setCurrentImageIndex(0);
             } else {
@@ -52,6 +102,13 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
             }
         } catch (err) {
             console.error(err);
+            // se a busca falhar, tenta usar a imagem que veio junto do reporte
+            if (report.imagem && typeof report.imagem === 'string') {
+                setImagensArray([report.imagem]);
+                setCurrentImageIndex(0);
+            } else {
+                setImagensArray([]);
+            }
         }
     };
 
@@ -223,8 +280,32 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
                                     </div>
                                 </>
                             )}
+                            <button
+                                className="btn-action"
+                                style={{ width: '100%', padding: '10px', marginTop: '10px' }}
+                                onClick={() => baixarImagem(imagensArray[currentImageIndex], currentImageIndex)}
+                            >
+                                Baixar imagem
+                            </button>
                         </div>
                     )}
+                </div>
+
+                <div className="details-avaliacao" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', paddingBottom: '12px', paddingLeft: '20px', paddingRight: '20px', marginTop: '24px' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#8b949e', marginBottom: '14px' }}>Avalie este reporte:</p>
+                    <div style={{ display: 'flex', gap: '6px', fontSize: '1.8rem' }}>
+                        {[1, 2, 3, 4, 5].map(n => (
+                            <span
+                                key={n}
+                                onClick={() => handleAvaliar(n)}
+                                onMouseEnter={() => setHoverNota(n)}
+                                onMouseLeave={() => setHoverNota(0)}
+                                style={{ cursor: 'pointer', color: n <= (hoverNota || nota) ? '#f0b429' : '#484f58' }}
+                            >
+                                ★
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="details-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px', marginTop: '15px' }}>
@@ -319,13 +400,23 @@ const ReportDetailsSheet = ({ report, onClose, onDenunciar, onStatusUpdated }) =
                             )}
                         </div>
 
-                        <button 
-                            className="btn-action btn-danger" 
-                            style={{ flex: 1, padding: '10px', whiteSpace: 'nowrap' }} 
-                            onClick={() => onDenunciar(report.id_reporte)}
-                        >
-                            Denunciar
-                        </button>
+                        {Number(report.id_usuario) === userIdLogado ? (
+                            <button
+                                className="btn-action btn-danger"
+                                style={{ flex: 1, padding: '10px', whiteSpace: 'nowrap' }}
+                                onClick={handleExcluirReporte}
+                            >
+                                Excluir
+                            </button>
+                        ) : (
+                            <button
+                                className="btn-action btn-danger"
+                                style={{ flex: 1, padding: '10px', whiteSpace: 'nowrap' }}
+                                onClick={() => onDenunciar(report.id_reporte)}
+                            >
+                                Denunciar
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

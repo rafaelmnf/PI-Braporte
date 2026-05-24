@@ -60,6 +60,21 @@ class AuthRepository {
             WHERE id = ${tokenId}
         `;
     }
+
+    async updateFotoPerfil(userId, imagem) {
+        await db`
+            UPDATE USUARIO
+            SET foto_perfil = ${imagem}
+            WHERE id_usuario = ${userId}
+        `;
+    }
+
+    async getFotoPerfil(userId) {
+        const result = await db`
+            SELECT foto_perfil FROM USUARIO WHERE id_usuario = ${userId}
+        `;
+        return result[0]?.foto_perfil || null;
+    }
 }
 
 module.exports = new AuthRepository();

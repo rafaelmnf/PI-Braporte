@@ -8,6 +8,7 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLoc
     const [address, setAddress] = useState('');
     const [desc, setDesc] = useState('');
     const [titleError, setTitleError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
     const [status, setStatus] = useState('idle');
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -122,6 +123,7 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLoc
     const handleSubmit = async () => {
         if (!title.trim()) { setTitleError(true); return; }
         setTitleError(false);
+        setErrorMsg('');
         setStatus('submitting');
         
         try {
@@ -137,6 +139,7 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLoc
             setStatus('success');
         } catch (error) {
             console.error(error);
+            setErrorMsg(error.message || 'Erro ao criar reporte.');
             setStatus('idle');
         }
     };
@@ -219,6 +222,18 @@ const ReportForm = ({ categoryId, onChangeCategory, onSubmit, viewState, userLoc
                     onChange={handleFileChange} 
                 />
             </div>
+
+            {errorMsg && (
+                <p style={{
+                    color: '#f85149',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    margin: '0 0 10px'
+                }}>
+                    {errorMsg}
+                </p>
+            )}
 
             <button
                 className="btn-submit"

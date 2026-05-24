@@ -36,7 +36,29 @@ class ImageService {
      */
     encodeBase64(buffer, type) {
         if (!buffer) return null;
-        const base64 = buffer.toString('base64');
+
+        let buf = buffer;
+
+        // o driver do Postgres pode devolver o bytea de formas diferentes:
+        // como Buffer (ideal), como string hex (\x89504e...) ou como objeto.
+        if (!Buffer.isBuffer(buf)) {
+            if (typeof buf === 'string') {
+                // string hex no formato \x...
+                if (buf.startsWith('\\x')) {
+                    buf = Buffer.from(buf.slice(2), 'hex');
+                } else {
+                    // ja pode ser uma string base64 / data URI
+                    return buf.startsWith('data:')
+                        ? buf
+                        : (type ? `data:${type};base64,${buf}` : buf);
+                }
+            } else {
+                // objeto tipo { type: 'Buffer', data: [...] }
+                buf = Buffer.from(buf.data || buf);
+            }
+        }
+
+        const base64 = buf.toString('base64');
         return type ? `data:${type};base64,${base64}` : base64;
     }
 }
