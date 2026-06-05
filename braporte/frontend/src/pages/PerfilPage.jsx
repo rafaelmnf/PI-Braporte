@@ -19,17 +19,28 @@ const PerfilPage = () => {
     const [loading, setLoading] = useState(true);
     const [fotoPerfil, setFotoPerfil] = useState(null);
 
-    const user = useMemo(() => {
+    const [user, setUser] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem('user')) || {};
         } catch { return {}; }
-    }, []);
+    });
 
     useEffect(() => {
         if (!user.id_usuario) {
             navigate('/login');
+            return;
         }
-    }, [user, navigate]);   
+
+        api.getUser(user.id_usuario)
+            .then(data => {
+                if (data.success && data.usuario) {
+                    const updated = { ...user, ...data.usuario };
+                    localStorage.setItem('user', JSON.stringify(updated));
+                    setUser(updated);
+                }
+            })
+            .catch(err => console.error("Erro ao buscar dados do usuário:", err));
+    }, [navigate]);
 
     useEffect(() => {
         if (!user.id_usuario) return;
@@ -118,7 +129,7 @@ const PerfilPage = () => {
                     )}
                     <input type="file" id="fotoInput" accept="image/*" style={{ display: 'none' }} onChange={handleFotoChange} />
                 </div>
-                <h1 className="perfil-nome">{user.nome || 'Urban Sentinel'}</h1>
+                <h1 className="perfil-nome">{user.nome_completo || user.nome || 'Urban Sentinel'}</h1>
                 <p className="perfil-cpf">CPF: {cpfMask}</p>
             </div>
 

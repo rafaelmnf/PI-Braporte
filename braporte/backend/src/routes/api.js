@@ -10,6 +10,7 @@ router.get('/config/mapbox', (req, res) => {
     res.json({ token: process.env.MAPBOX_TOKEN || '' });
 });
 
+router.get('/usuarios/:id', userController.getUser);
 router.get('/usuarios/:id/endereco', userController.getUserAddress);
 router.post('/usuarios/:id/foto', userController.updateFotoPerfil);
 router.get('/usuarios/:id/foto', userController.getFotoPerfil);

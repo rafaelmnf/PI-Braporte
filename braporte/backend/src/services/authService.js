@@ -31,7 +31,8 @@ class AuthService {
             usuario: {
                 id_usuario: user.id_usuario,
                 nome_completo: user.nome_completo,
-                email: user.email
+                email: user.email,
+                cpf: user.cpf
             }
         };
     }

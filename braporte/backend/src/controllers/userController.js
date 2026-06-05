@@ -53,3 +53,20 @@ exports.getFotoPerfil = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar foto' });
     }
 };
+
+// Retorna as informações básicas do usuário
+exports.getUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db`SELECT id_usuario, nome_completo, email, cpf FROM USUARIO WHERE id_usuario = ${id}`;
+
+        if (result.length === 0) {
+            return res.status(404).json({ success: false, mensagem: 'Usuário não encontrado' });
+        }
+
+        res.status(200).json({ success: true, usuario: result[0] });
+    } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        res.status(500).json({ success: false, mensagem: 'Erro interno no servidor' });
+    }
+};

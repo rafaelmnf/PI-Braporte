@@ -1,6 +1,12 @@
 const API_URL = 'http://localhost:3000/api';
 
 export const api = {
+    async getUser(id) {
+        const response = await fetch(`${API_URL}/usuarios/${id}`);
+        if (!response.ok) throw new Error('Erro ao buscar dados do usuário');
+        return response.json();
+    },
+
     async getUserAddress(id) {
         const response = await fetch(`${API_URL}/usuarios/${id}/endereco`);
         if (!response.ok) throw new Error('Erro ao buscar endereço');
