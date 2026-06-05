@@ -1,6 +1,30 @@
 const sql = require('../config/db');
 
 class ReportRepository {
+    // verifica se ja existe um reporte da mesma categoria a menos de ~10m
+    async existeReportePerto(categoria, latitude, longitude) {
+        if (latitude == null || longitude == null) return false;
+        // 6371000 = raio da Terra em metros (formula de Haversine no proprio SQL)
+        const [achado] = await sql`
+            SELECT r.id_reporte
+            FROM reportes r
+            JOIN geolocalizacao g ON r.id_reporte = g.id_reporte
+            WHERE r.categoria = ${categoria}
+              AND r.status != 'excluido'
+              AND (
+                6371000 * acos(
+                    LEAST(1, GREATEST(-1,
+                        cos(radians(${latitude})) * cos(radians(g.latitude)) *
+                        cos(radians(g.longitude) - radians(${longitude})) +
+                        sin(radians(${latitude})) * sin(radians(g.latitude))
+                    ))
+                )
+              ) <= 10
+            LIMIT 1
+        `;
+        return !!achado;
+    }
+
     async createReport(reportData) {
         const { id_usuario, motivo, descricao, categoria, latitude, longitude, endereco, imagem, tipo_imagem } = reportData;
         
@@ -53,27 +77,13 @@ class ReportRepository {
     }
 
     async denunciarReport(id_reporte, id_usuario) {
-        return await sql.begin(async sql => {
-            const [reporteAtualizado] = await sql`
-                UPDATE reportes
-                SET status = 'denunciado'
-                WHERE id_reporte = ${id_reporte}
-                RETURNING *
-            `;
-
-            if (reporteAtualizado) {
-                await sql`
-                    INSERT INTO usuario_reporte (id_usuario, id_reporte, tipo_contribuicao, data_contribuicao, data_atualizacao)
-                    VALUES (${id_usuario}, ${id_reporte}, 'denuncia', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT (id_usuario, id_reporte) 
-                    DO UPDATE SET 
-                        tipo_contribuicao = 'denuncia',
-                        data_atualizacao = CURRENT_TIMESTAMP
-                `;
-            }
-
-            return reporteAtualizado;
-        });
+        const [reporteAtualizado] = await sql`
+            UPDATE reportes
+            SET status = 'denunciado'
+            WHERE id_reporte = ${id_reporte}
+            RETURNING *
+        `;
+        return reporteAtualizado;
     }
 
     async registrarVoto(usuarioId, reporteId, tipo_contribuicao) {
@@ -128,6 +138,65 @@ class ReportRepository {
             WHERE id_reporte = ${id_reporte}
             GROUP BY tipo_contribuicao
         `;
+    }
+
+    async avaliarReporte(id_reporte, id_usuario, nota) {
+        return await sql.begin(async sql => {
+            // grava o voto, ou atualiza se o usuario ja tinha avaliado
+            await sql`
+                INSERT INTO avaliacoes (id_reporte, id_usuario, nota)
+                VALUES (${id_reporte}, ${id_usuario}, ${nota})
+                ON CONFLICT (id_reporte, id_usuario)
+                DO UPDATE SET nota = EXCLUDED.nota, data_avaliacao = CURRENT_TIMESTAMP
+            `;
+
+            // recalcula a media do reporte
+            const [media] = await sql`
+                SELECT AVG(nota)::numeric(3,2) as media
+                FROM avaliacoes WHERE id_reporte = ${id_reporte}
+            `;
+            await sql`
+                UPDATE reportes SET avaliacao = ${media.media}
+                WHERE id_reporte = ${id_reporte}
+            `;
+
+            // atualiza a credibilidade do autor do reporte
+            const [autor] = await sql`
+                SELECT id_usuario FROM reportes WHERE id_reporte = ${id_reporte}
+            `;
+            const [cred] = await sql`
+                SELECT AVG(a.nota)::numeric(3,2) as media
+                FROM avaliacoes a
+                JOIN reportes r ON a.id_reporte = r.id_reporte
+                WHERE r.id_usuario = ${autor.id_usuario}
+            `;
+            await sql`
+                UPDATE usuario SET credibilidade = ${cred.media || 0}
+                WHERE id_usuario = ${autor.id_usuario}
+            `;
+
+            return media.media;
+        });
+    }
+
+    async deletarReporte(id_reporte, id_usuario) {
+        return await sql.begin(async sql => {
+            // confirma que o reporte existe e pertence ao usuario
+            const [reporte] = await sql`
+                SELECT id_usuario FROM reportes WHERE id_reporte = ${id_reporte}
+            `;
+
+            if (!reporte) return { naoEncontrado: true };
+            if (Number(reporte.id_usuario) !== Number(id_usuario)) return { semPermissao: true };
+
+            // marca o reporte como excluido (mantem o registro para a contagem do perfil)
+            await sql`
+                UPDATE reportes SET status = 'excluido'
+                WHERE id_reporte = ${id_reporte}
+            `;
+
+            return { sucesso: true };
+        });
     }
 }
 

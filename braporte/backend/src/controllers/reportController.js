@@ -4,6 +4,11 @@ exports.createReport = async (req, res) => {
     try {
         const reporteCompleto = await reportService.createReport(req.body);
 
+        // o service avisa quando ja existe um reporte igual perto
+        if (reporteCompleto && reporteCompleto.duplicado) {
+            return res.status(409).json({ error: 'Esse reporte já existe.' });
+        }
+
         res.status(201).json({ 
             sucesso: true, 
             mensagem: 'Reporte criado com sucesso', 
@@ -92,5 +97,47 @@ exports.getImagensReporte = async (req, res) => {
     } catch (err) {
         console.error('Erro ao buscar imagens:', err);
         res.status(500).json({ error: 'Erro ao buscar imagens' });
+    }
+};
+
+exports.avaliarReporte = async (req, res) => {
+    const { id } = req.params;
+    const { id_usuario, nota } = req.body;
+
+    if (!id_usuario || !nota || nota < 1 || nota > 5) {
+        return res.status(400).json({ error: 'id_usuario e nota (1 a 5) são obrigatórios.' });
+    }
+
+    try {
+        const media = await reportService.avaliarReporte(id, id_usuario, nota);
+        res.status(200).json({ sucesso: true, media });
+    } catch (err) {
+        console.error('Erro ao avaliar reporte:', err);
+        res.status(500).json({ error: 'Erro ao avaliar reporte' });
+    }
+};
+
+exports.deletarReporte = async (req, res) => {
+    const { id } = req.params;
+    const { id_usuario } = req.body;
+
+    if (!id_usuario) {
+        return res.status(400).json({ error: 'id_usuario é obrigatório.' });
+    }
+
+    try {
+        const resultado = await reportService.deletarReporte(id, id_usuario);
+
+        if (resultado.naoEncontrado) {
+            return res.status(404).json({ error: 'Reporte não encontrado' });
+        }
+        if (resultado.semPermissao) {
+            return res.status(403).json({ error: 'Você só pode excluir os seus próprios reportes.' });
+        }
+
+        res.status(200).json({ sucesso: true, mensagem: 'Reporte excluído com sucesso' });
+    } catch (err) {
+        console.error('Erro ao excluir reporte:', err);
+        res.status(500).json({ error: 'Erro ao excluir reporte' });
     }
 };

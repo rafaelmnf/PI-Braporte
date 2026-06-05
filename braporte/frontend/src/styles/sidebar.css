@@ -22,7 +22,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 280px;
+    width: 290px;
     background: #0d1117;
     border-right: 1px solid #21262d;
     display: flex;
@@ -36,23 +36,25 @@
     to { transform: translateX(0); }
 }
 
+/* Cabeçalho */
 .sidebar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 20px 20px;
+    padding: 22px 20px 18px;
     border-bottom: 1px solid #21262d;
 }
 
 .sidebar-header h2 {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 800;
     color: #33d17a;
+    letter-spacing: -0.3px;
 }
 
 .sidebar-close {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border: none;
     background: #161b22;
     border-radius: 50%;
@@ -61,46 +63,177 @@
     justify-content: center;
     color: #8b949e;
     cursor: pointer;
+    transition: background 0.15s, color 0.15s;
 }
 
+.sidebar-close:hover {
+    background: #21262d;
+    color: #e6edf3;
+}
+
+/* Navegação */
 .sidebar-nav {
-    flex: 1;
-    padding: 12px 0;
+    padding: 14px 12px 6px;
     display: flex;
     flex-direction: column;
+    gap: 2px;
 }
 
 .sidebar-nav button {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 13px;
     width: 100%;
-    padding: 14px 20px;
+    padding: 12px 14px;
     border: none;
     background: none;
-    color: #e6edf3;
+    color: #c9d1d9;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.92rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s;
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
     text-align: left;
 }
 
-.sidebar-nav button:active { background: #161b22; }
-
-.sidebar-divider {
-    height: 1px;
-    background: #21262d;
-    margin: 8px 20px;
+.sidebar-nav button svg {
+    color: #8b949e;
+    transition: color 0.15s;
+    flex-shrink: 0;
 }
 
+.sidebar-nav button:hover {
+    background: #161b22;
+    color: #fff;
+}
+
+.sidebar-nav button:hover svg {
+    color: #33d17a;
+}
+
+.sidebar-nav button:active {
+    transform: scale(0.98);
+}
+
+/* Seção de reportes próximos */
+.sidebar-proximos {
+    padding: 16px 16px 12px;
+    margin-top: 6px;
+    border-top: 1px solid #21262d;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-proximos-titulo {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6e7681;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.sidebar-proximos-vazio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #6e7681;
+    padding: 8px 4px;
+    line-height: 1.4;
+}
+
+/* Spinner do "buscando" */
+.sidebar-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #30363d;
+    border-top-color: #33d17a;
+    border-radius: 50%;
+    animation: sidebar-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes sidebar-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Card de reporte próximo */
+.sidebar-proximo-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.sidebar-proximo-item:hover {
+    border-color: #2ea043;
+    background: #1a2129;
+}
+
+.sidebar-proximo-item:active {
+    transform: scale(0.98);
+}
+
+.sidebar-proximo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #33d17a;
+    flex-shrink: 0;
+}
+
+.sidebar-proximo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.sidebar-proximo-titulo {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #e6edf3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-proximo-cat {
+    font-size: 0.72rem;
+    color: #6e7681;
+    text-transform: capitalize;
+}
+
+.sidebar-proximo-dist {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #33d17a;
+    flex-shrink: 0;
+    background: rgba(51, 209, 122, 0.1);
+    padding: 3px 8px;
+    border-radius: 20px;
+}
+
+/* Rodapé */
 .sidebar-footer {
-    padding: 16px 20px;
+    padding: 14px 20px;
     border-top: 1px solid #21262d;
 }
 
 .sidebar-footer p {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: #484f58;
+    letter-spacing: 0.3px;
 }

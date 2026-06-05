@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 import FilterChips from '../components/FilterChips';
 import ReportPopup from '../components/ReportPopup';
@@ -31,11 +31,23 @@ const MapaPage = () => {
 
     const [reports, setReports] = useState([]);
     const [selectedReport, setSelectedReport] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // puxa reportes
     useEffect(() => {
         api.getReports()
-            .then(data => setReports(data.reportes || []))
+            .then(data => {
+                const ativos = (data.reportes || []).filter(r => r.status !== 'excluido');
+                setReports(ativos);
+
+                // se veio um id de reporte na URL, abre o painel dele
+                const idReporte = searchParams.get('reporte');
+                if (idReporte) {
+                    const alvo = ativos.find(r => String(r.id_reporte) === idReporte);
+                    if (alvo) setSelectedReport(alvo);
+                    setSearchParams({}, { replace: true });
+                }
+            })
             .catch(err => console.error("Erro ao carregar reportes:", err));
     }, []);
 
@@ -70,9 +82,11 @@ const MapaPage = () => {
         return () => navigator.geolocation.clearWatch(watchId);
     }, []);
 
+    // sempre esconde os reportes excluidos; depois aplica o filtro de categoria
+    const reportesAtivos = reports.filter(r => r.status !== 'excluido');
     const displayReports = activeFilter === 'todos'
-        ? reports
-        : reports.filter(r => r.categoria === activeFilter);
+        ? reportesAtivos
+        : reportesAtivos.filter(r => r.categoria === activeFilter);
 
     // lugar selecionado na busca
     const handlePlaceSelected = useCallback((coords) => {
@@ -109,6 +123,8 @@ const MapaPage = () => {
             setReports(prev => [response.reporte, ...prev]);
         } catch (error) {
             console.error("Erro ao criar reporte:", error);
+            // repassa o erro para o formulário poder exibir a mensagem
+            throw error;
         }
     }, [viewState.latitude, viewState.longitude]);
 

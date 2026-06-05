@@ -1,10 +1,15 @@
 node_modules/
-**/node_modules/
+dist/
+build/
 
-# Ambientes Locais e Configurações Seguras
 .env
-.env.*
-!.env.example
+.env.local
+.env.development
+.env.production
 
-# Documents 
-docs/
+backend/.env
+frontend/.env
+
+.DS_Store
+Thumbs.db
+.vscode/

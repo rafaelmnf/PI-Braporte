@@ -6,6 +6,14 @@ class ReportService {
         // Fallback p/ id_usuario se o auth ainda não injetar req.user
         reportData.id_usuario = reportData.id_usuario || 1; 
 
+        // Bloqueia reporte duplicado: mesma categoria a menos de ~10m
+        const duplicado = await reportRepository.existeReportePerto(
+            reportData.categoria, reportData.latitude, reportData.longitude
+        );
+        if (duplicado) {
+            return { duplicado: true };
+        }
+
         // Processamento da imagem
         if (reportData.imagem) {
             const decoded = imageService.decodeBase64(reportData.imagem);
@@ -98,6 +106,14 @@ class ReportService {
     async getImagens(id_reporte) {
         const imagens = await reportRepository.getImagens(id_reporte);
         return imagens.map(img => imageService.encodeBase64(img.bin_imagem, img.tipo_imagem));
+    }
+
+    async avaliarReporte(id_reporte, id_usuario, nota) {
+        return await reportRepository.avaliarReporte(id_reporte, id_usuario, nota);
+    }
+
+    async deletarReporte(id_reporte, id_usuario) {
+        return await reportRepository.deletarReporte(id_reporte, id_usuario);
     }
 }
 

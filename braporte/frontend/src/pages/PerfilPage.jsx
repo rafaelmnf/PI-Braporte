@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import MenuButton from '../components/MenuButton';
 import '../styles/perfil.css';
 
 const PARTICIPOU_KEY = 'braporte_participou';
@@ -16,6 +17,7 @@ const PerfilPage = () => {
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fotoPerfil, setFotoPerfil] = useState(null);
 
     const user = useMemo(() => {
         try {
@@ -29,11 +31,30 @@ const PerfilPage = () => {
         }
     }, [user, navigate]);   
 
-    const acoesParticipadas = useMemo(() => {
-        try {
-            return JSON.parse(localStorage.getItem(PARTICIPOU_KEY)) || [];
-        } catch { return []; }
-    }, []);
+    useEffect(() => {
+        if (!user.id_usuario) return;
+        api.getFotoPerfil(user.id_usuario)
+            .then(data => { if (data.foto) setFotoPerfil(data.foto); })
+            .catch(() => {});
+    }, [user.id_usuario]);
+
+    const handleFotoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            setFotoPerfil(reader.result);
+            try {
+                await api.updateFotoPerfil(user.id_usuario, reader.result);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const [acoesConcluidas, setAcoesConcluidas] = useState(0);
 
     useEffect(() => {
         api.getReports()
@@ -42,15 +63,31 @@ const PerfilPage = () => {
             .finally(() => setLoading(false));
     }, []);
 
+    // conta quantas acoes concluidas o usuario participou
+    useEffect(() => {
+        if (!user.id_usuario) return;
+        Promise.all([
+            api.getMinhasParticipacoes(user.id_usuario),
+            api.getAcoes()
+        ]).then(([part, acoesData]) => {
+            const meus = part.participacoes || [];
+            const acoes = acoesData.acoes || [];
+            const concluidas = acoes.filter(a => meus.includes(a.id_acao) && a.status === 'concluida');
+            setAcoesConcluidas(concluidas.length);
+        }).catch(() => {});
+    }, [user.id_usuario]);
+
     const stats = useMemo(() => {
         const userId = user.id_usuario;
         const meusReportes = userId ? reports.filter(r => r.id_usuario === userId) : [];
         const total = meusReportes.length;
         const resolvidos = meusReportes.filter(r => r.status === 'resolvido').length;
+        const excluidos = meusReportes.filter(r => r.status === 'excluido').length;
+        const ativos = meusReportes.filter(r => r.status !== 'resolvido' && r.status !== 'excluido').length;
         // calcula xp
-        const xp = (total * 10) + (resolvidos * 5) + (acoesParticipadas.length * 3);
-        return { total, resolvidos, xp, acoes: acoesParticipadas.length };
-    }, [reports, user, acoesParticipadas]);
+        const xp = (total * 10) + (resolvidos * 5) + (acoesConcluidas * 3);
+        return { total, resolvidos, excluidos, ativos, xp, acoes: acoesConcluidas };
+    }, [reports, user, acoesConcluidas]);
 
     const badgesConquistados = useMemo(() => {
         return BADGES.map(b => ({ ...b, unlocked: stats.total >= b.min }));
@@ -68,12 +105,18 @@ const PerfilPage = () => {
 
     return (
         <div className="perfil-page">
+            <MenuButton />
             <div className="perfil-header">
-                <div className="perfil-avatar">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b949e" strokeWidth="1.5">
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
+                <div className="perfil-avatar" onClick={() => document.getElementById('fotoInput').click()} style={{ cursor: 'pointer', overflow: 'hidden' }}>
+                    {fotoPerfil ? (
+                        <img src={fotoPerfil} alt="Foto de perfil" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b949e" strokeWidth="1.5">
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    )}
+                    <input type="file" id="fotoInput" accept="image/*" style={{ display: 'none' }} onChange={handleFotoChange} />
                 </div>
                 <h1 className="perfil-nome">{user.nome || 'Urban Sentinel'}</h1>
                 <p className="perfil-cpf">CPF: {cpfMask}</p>
@@ -94,9 +137,19 @@ const PerfilPage = () => {
                     <span className="stat-label">REPORTES FEITOS</span>
                 </div>
                 <div className="perfil-stat">
+                    <span className="stat-icon">🟢</span>
+                    <span className="stat-number">{stats.ativos}</span>
+                    <span className="stat-label">ATIVOS</span>
+                </div>
+                <div className="perfil-stat">
                     <span className="stat-icon">✅</span>
                     <span className="stat-number">{stats.resolvidos}</span>
                     <span className="stat-label">RESOLVIDOS</span>
+                </div>
+                <div className="perfil-stat">
+                    <span className="stat-icon">🗑️</span>
+                    <span className="stat-number">{stats.excluidos}</span>
+                    <span className="stat-label">EXCLUÍDOS</span>
                 </div>
             </div>
 

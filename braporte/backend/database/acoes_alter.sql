@@ -1,0 +1,3 @@
+ALTER TABLE acoes_comunitarias
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ativa',
+    ADD COLUMN IF NOT EXISTS imagem TEXT;
